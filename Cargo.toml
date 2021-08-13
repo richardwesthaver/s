@@ -1,0 +1,18 @@
+[package]
+name = "shedctl"
+version = "0.1.0"
+authors = ["ellis"]
+description = "~gardening tools~"
+edition = "2018"
+author = "ellis <demon@rwest.io>"
+publish = ["crater"]
+
+[[bin]]
+name = "shed"
+path = "src/main.rs"
+
+[dependencies]
+logger = { path = "../rlib/sys/logger" }
+shed = { path = "../rlib/app/shed" }
+ctx = { path = "../rlib/ctx" }
+clap = { path = "../contrib/lib/rust/clap", version = "3.0.0-beta.2" }
