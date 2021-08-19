@@ -1,0 +1,18 @@
+[package]
+name = "shed"
+version = "0.1.0"
+edition = "2018"
+[dependencies]
+# internal
+kala = { path = "../../rlib/kala" }
+ctx = { path = "../../rlib/ctx" }
+cfg = { path = "../../rlib/cfg" }
+db = { path = "../../rlib/db" }
+net = { path = "../../rlib/net" }
+util = { path = "../../rlib/util", features = ["anyhow"] }
+serde = { version = "1.0.126", path = "../../contrib/rust/serde/serde", features = ["derive"] }
+hash = { version = "0.1.0", path = "../../rlib/hash" }
+logger = { version = "0.1.0", path = "../../rlib/logger" }
+
+[dev-dependencies]
+tempfile = { version = "3.2.0", path = "../../contrib/rust/tempfile" }

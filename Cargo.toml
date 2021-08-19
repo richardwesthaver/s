@@ -2,9 +2,12 @@
 name = "shedctl"
 version = "0.1.0"
 authors = ["ellis"]
-description = "~gardening tools~"
 edition = "2018"
-author = "ellis <demon@rwest.io>"
+documentation = "https://docs.rwest.io/shed"
+repository = "https://hg.rwest.io/shed"
+readme = "META"
+license-file = "COPYING"
+description = "~gardening tools~"
 publish = ["crater"]
 
 [[bin]]
@@ -12,7 +15,12 @@ name = "shed"
 path = "src/main.rs"
 
 [dependencies]
-logger = { path = "../rlib/sys/logger" }
-shed = { path = "../rlib/app/shed" }
-ctx = { path = "../rlib/ctx" }
-clap = { path = "../contrib/lib/rust/clap", version = "3.0.0-beta.2" }
+logger = { version = "0.1.0", path = "../rlib/logger" }
+shed = { version = "0.1.0", path = "lib" }
+ctx = { version = "0.1.0", path = "../rlib/ctx" }
+clap = { version = "3.0.0-beta.2", path = "../contrib/rust/clap" }
+
+[env]
+SHED_CFG = "$HOME/.config/shed.ron"
+SHED_SRC = "$HOME/src"
+SHED_BIN = "$HOME/.cargo/bin/shedctl"
