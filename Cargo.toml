@@ -22,5 +22,5 @@ clap = { version = "3.0.0-beta.2", path = "../contrib/rust/clap" }
 
 [env]
 SHED_CFG = "$HOME/.config/shed.ron"
-SHED_SRC = "$HOME/src"
+SHED_DIR = "$HOME/src"
 SHED_BIN = "$HOME/.cargo/bin/shedctl"
