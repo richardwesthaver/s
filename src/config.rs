@@ -1,6 +1,6 @@
-//! shed/config
+//! config module
 //!
-//! Shed configurationn layer.
+//! Shed configuration layer.
 
 use std::{
   fs,
@@ -16,7 +16,6 @@ use cfg::{
   },
   NetworkConfig, PackageConfig, Result,
 };
-use hash::{B3Hash, B3Hasher, Id};
 use serde::{Deserialize, Serialize};
 
 pub fn load_config(path: &str) {
@@ -31,7 +30,6 @@ pub fn write_config(config: Config, output: &Path) {
 
 #[derive(Serialize, Deserialize, Debug, Hash)]
 pub struct Config {
-  id: String,
   shed_path: PathBuf,
   pkg_path: PathBuf,
   contrib_path: PathBuf,
@@ -43,10 +41,7 @@ pub struct Config {
 impl Default for Config {
   // default params are relative
   fn default() -> Self {
-    let id = Id::rand();
-    let hash = id.state_hash(&mut B3Hasher::new());
     Config {
-      id: hash.to_hex(),
       shed_path: PathBuf::from("~/shed"),
       pkg_path: PathBuf::from("pkg"),
       pkg_config: None,

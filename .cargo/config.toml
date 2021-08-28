@@ -1,2 +1,4 @@
-[unstable]
-configurable-env = true
+[env]
+SHED_CFG = "$HOME/.config/shed.ron"
+SHED_DIR = "$HOME/shed"
+SHED_BIN = "$HOME/.cargo/bin/shed"

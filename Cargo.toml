@@ -1,5 +1,5 @@
 [package]
-name = "shedctl"
+name = "shed"
 version = "0.1.0"
 authors = ["ellis"]
 edition = "2018"
@@ -10,17 +10,17 @@ license-file = "COPYING"
 description = "~gardening tools~"
 publish = ["crater"]
 
-[[bin]]
-name = "shed"
-path = "src/main.rs"
-
 [dependencies]
+# rlib
 logger = { version = "0.1.0", path = "../rlib/logger" }
-shed = { version = "0.1.0", path = "lib" }
 ctx = { version = "0.1.0", path = "../rlib/ctx" }
-clap = { version = "3.0.0-beta.2", path = "../contrib/rust/clap" }
-
-[env]
-SHED_CFG = "$HOME/.config/shed.ron"
-SHED_DIR = "$HOME/src"
-SHED_BIN = "$HOME/.cargo/bin/shedctl"
+util = { version = "0.1.0", path = "../rlib/util", features = ["cli"] }
+cfg = { version = "0.1.0", path = "../rlib/cfg" }
+obj = { version = "0.1.0", path = "../rlib/obj" }
+flate = { version = "0.1.0", path = "../rlib/flate" }
+db = { version = "0.1.0", path = "../rlib/db" }
+net = { version = "0.1.0", path = "../rlib/net", features = ["server", "client"] }
+# contrib
+serde = { version = "1.0.128", features = ["derive"] }
+[dev-dependencies]
+tempfile = { version = "3.2.0" }

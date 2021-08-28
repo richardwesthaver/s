@@ -1,42 +1,17 @@
-use clap::{AppSettings, ArgSettings, Clap};
-use logger::log::info;
-use shed::{Client, Config, Result, Server};
-/// Shed CLI Options
-#[derive(Clap, Debug)]
-#[clap(name = "shed",
-       author,
-       about,
-       version,
-       setting = AppSettings::ColorAuto,
-       setting = AppSettings::ColoredHelp)]
-pub struct Opt {
-    /// the subcommand to execute
-    #[clap(subcommand)]
-    cmd: Option<Cmd>,
-    /// config.ron to use for this run
-    #[clap(short, long, env = "SHED_CFG")]
-    config: String,
+//! # shed
+//!
+//! A Shed is a nested structure used to store collections of
+//! development resources such as code, configs, docs, and data.
+//!
+//! This program is used to bootstrap, configure, and manage a local
+//! Shed.
+mod app;
+mod config;
 
-    /// input files
-    #[clap(short, long)]
-    input: Option<Vec<String>>,
+use util::cli::{AppSettings, ArgSettings, Clap};
+use util::Result;
 
-    /// stdout if no file, no logging if not present
-    #[clap(long)]
-    #[allow(clippy::option_option)]
-    log: Option<Option<String>>,
-
-    /// Output files
-    #[clap(short, long)]
-    out: Option<Vec<String>>,
-
-    #[clap(long)]
-    /// DemonId
-    id: Option<String>,
-}
-
-#[derive(Clap, Debug)]
-#[clap()]
+#[derive(Debug)]
 pub enum Cmd {
     /// pack a Package from the Registry in tar.zst format
     Pack,
@@ -54,11 +29,7 @@ pub enum Cmd {
 
 #[ctx::main]
 async fn main() -> Result<()> {
-    logger::flexi()?;
-    let opt = Opt::parse();
-    println!("{:#?}", opt);
+    logger::flexi("info")?;
 
-    let cfg = Config::load(&opt.config);
-    info!("{:#?}", cfg);
     Ok(())
 }
