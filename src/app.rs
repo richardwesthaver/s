@@ -1,22 +1,22 @@
-use std::fmt;
-use db::Registry;
 use cfg::NetworkConfig;
+use db::Registry;
+use std::fmt;
 
 pub struct Client {
-  engine: net::Client,
-  registry: Registry,
-  config: NetworkConfig,
+    engine: net::Client,
+    registry: Registry,
+    config: NetworkConfig,
 }
 
 impl Client {
-  pub fn get(&self, key: String) -> net::Result<String> {
-    Ok("heythere".to_string())
-  }
+    pub fn get(&self, key: String) -> net::Result<String> {
+        Ok("heythere".to_string())
+    }
 }
 pub struct Server {
-  engine: net::Server,
-  registry: Registry,
-  config: NetworkConfig,
+    engine: net::Server,
+    registry: Registry,
+    config: NetworkConfig,
 }
 
 impl Server {}
