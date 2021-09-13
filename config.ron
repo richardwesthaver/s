@@ -1,0 +1,30 @@
+#![enable(implicit_some)]
+(
+    version: "0.1.0",
+    name: "shed.cfg",
+    id: "def1245", // you can use the same config file for custom value parsing
+    path: "/mnt/src",
+
+    src: [
+        (name: "rlib",
+            repo: (vcs: "hg", origin: "https://hg.rwest.io/rlib", path: "rlib"),
+            lib: ()),
+        (name: "tenex",
+            repo: (vcs: "hg", origin: "https://hg.rwest.io/tenex", path: "tenex"),
+            lib: ()),
+        (name: "shed",
+            repo: (vcs: "hg", origin: "https://hg.rwest.io/shed", path: "shed"),
+            bin: ()),
+    ],
+
+    network: (socket: "0.0.0.0:0", transport: "udp"),
+    
+    hgrc: (
+      name: "zor-shed",
+      description: "local shed",
+      contact: "ellis@rwest.io",
+      extensions: [],
+      sock: "127.0.0.1:8000",
+      paths: { "rlib": "./rlib" },
+    ),
+)

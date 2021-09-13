@@ -1,2 +1,3 @@
 ^target/
 glob:Cargo.lock
+cfg.ron

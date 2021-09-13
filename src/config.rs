@@ -9,54 +9,39 @@ use std::{
 };
 
 use cfg::{
+    config::Configure,
     ron::{
         de::from_reader,
         extensions::Extensions,
         ser::{to_string_pretty, PrettyConfig},
     },
-    NetworkConfig, PackageConfig, Result,
+    NetworkConfig, PackageConfig, HgwebConfig, Result,
 };
 use serde::{Deserialize, Serialize};
 
-pub fn load_config(path: &str) {
-    let cfg: Config = Config::load(path).unwrap();
-    println!("Config: {:?}", cfg);
-}
-
-/// Write the given Configuration to a config.ron file.
-pub fn write_config(config: Config, output: &Path) {
-    config.write(output).expect("should write config to output");
-}
-
-#[derive(Serialize, Deserialize, Debug, Hash)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    shed_path: PathBuf,
-    pkg_path: PathBuf,
-    contrib_path: PathBuf,
-    pkg_config: Option<Vec<(String, PackageConfig)>>,
-    include: Option<PathBuf>,
-    network: Option<NetworkConfig>,
+    pub path: PathBuf,
+    pub owner: Option<String>,
+    pub src: Vec<PackageConfig>,
+    pub network: NetworkConfig,
+    pub hgrc: HgwebConfig,
 }
 
 impl Default for Config {
     // default params are relative
     fn default() -> Self {
         Config {
-            shed_path: PathBuf::from("~/shed"),
-            pkg_path: PathBuf::from("pkg"),
-            pkg_config: None,
-            contrib_path: PathBuf::from("contrib"),
-            include: None,
-            network: Some(NetworkConfig::default()),
+            path: PathBuf::from(option_env!("SHED_CFG").unwrap_or(".")),
+            owner: Some(env!("USER").to_string()),
+            src: vec![],
+            network: NetworkConfig::default(),
+            hgrc: HgwebConfig::default(),
         }
     }
 }
 
 impl Config {
-    pub fn new() -> Self {
-        Config::default()
-    }
-
     pub fn write(&self, path: &Path) -> Result<()> {
         let pretty = PrettyConfig::new()
             .with_indentor("  ".to_owned())
@@ -68,8 +53,8 @@ impl Config {
         Ok(())
     }
 
-    pub fn load(path: &str) -> Result<Self> {
-        let f = fs::File::open(path).expect("Failed to read config.ron file.");
+    pub fn load(path: String) -> Result<Self> {
+        let f = fs::File::open(path)?;
         let config: Config = match from_reader(f) {
             Ok(x) => x,
             Err(e) => {
@@ -79,15 +64,6 @@ impl Config {
         };
         Ok(config)
     }
-    pub fn include(path: &str) -> Result<Self> {
-        let f = fs::File::open(path).expect("Failed to read config.ron file.");
-        let config: Config = match from_reader(f) {
-            Ok(x) => x,
-            Err(e) => {
-                println!("Failed to include config: {}", e);
-                std::process::exit(1);
-            }
-        };
-        Ok(config)
-    }
 }
+
+impl Configure for Config {}
