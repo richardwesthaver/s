@@ -24,5 +24,7 @@ kala = { version = "0.1.0", path = "../rlib/kala" }
 # contrib
 serde = { version = "1.0.128", features = ["derive"] }
 clap = "3.0.0-beta.4"
+crossterm = { version = "0.17", features = ["event-stream"] }
+# cursive = { version = "0.16" }
 [dev-dependencies]
 tempfile = { version = "3.2.0" }
