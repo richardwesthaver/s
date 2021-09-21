@@ -17,7 +17,7 @@ use config::Config;
 // rlib
 use util::{Result};
 use logger::log::info;
-use cfg::config::Configure;
+use obj::config::Configure;
 // contrib
 use clap::Clap;
 // std

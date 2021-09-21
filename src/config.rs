@@ -2,21 +2,24 @@
 //!
 //! Shed configuration layer.
 
-use std::{
-    fs,
-    io::Write,
-    path::{Path, PathBuf},
-};
+use std::{fs, io::Write, path::{Path, PathBuf}};
 
-use cfg::{
-    config::Configure,
+use obj::{
+  config::{
+    Configure,
+    network::NetworkConfig,
+    package::PackageConfig,
+    repo::hg::HgwebConfig,
+
+  },
     ron::{
         de::from_reader,
         extensions::Extensions,
         ser::{to_string_pretty, PrettyConfig},
     },
-    NetworkConfig, PackageConfig, HgwebConfig, Result,
+    Result,
 };
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -42,14 +45,14 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn write(&self, path: &Path) -> Result<()> {
+    pub fn write<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let pretty = PrettyConfig::new()
             .with_indentor("  ".to_owned())
             .with_extensions(Extensions::all());
-        let mut file = fs::File::create(path)?;
+        let mut file = fs::File::create(&path)?;
         let s = to_string_pretty(&self, pretty).expect("Serialization failed");
         write!(file, "{}", s).unwrap();
-        println!("wrote to file - {}", path.display());
+        println!("wrote to file - {}", path.as_ref().display());
         Ok(())
     }
 

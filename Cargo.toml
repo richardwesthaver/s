@@ -15,12 +15,11 @@ publish = ["crater"]
 logger = { version = "0.1.0", path = "../rlib/logger" }
 ctx = { version = "0.1.0", path = "../rlib/ctx" }
 util = { version = "0.1.0", path = "../rlib/util", features = ["cli"] }
-cfg = { version = "0.1.0", path = "../rlib/cfg" }
-obj = { version = "0.1.0", path = "../rlib/obj" }
+obj = { version = "0.1.0", path = "../rlib/obj", features = ["config", "hg"] }
 flate = { version = "0.1.0", path = "../rlib/flate" }
 db = { version = "0.1.0", path = "../rlib/db" }
 net = { version = "0.1.0", path = "../rlib/net", features = ["full"] }
-kala = { version = "0.1.0", path = "../rlib/kala" }
+kala = { version = "0.1.0", path = "../rlib/kala", features = ["hg"] }
 # contrib
 serde = { version = "1.0.128", features = ["derive"] }
 clap = "3.0.0-beta.4"
