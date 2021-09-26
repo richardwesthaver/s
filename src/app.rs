@@ -1,43 +1,70 @@
 use crate::Config;
-use kala::cmd::hg::hgweb;
-use net::{Client, Server};
+use rlib::{db::registry::Registry, kala::cmd::hg::hgweb, logger::log::error, net::{
+    Client,
+    Result,
+//    engine::{
+//      dns::{self, resolver::Lookup},
+//      http::{service, Router, ServeDir}
+}};
+
+use std::path::PathBuf;
 
 pub struct App {
   pub cfg: Config,
+  pub registry: Registry,
 }
 
 impl App {
   pub fn new(cfg: Config) -> Self {
-    App {cfg}
+    let shed_path: PathBuf = cfg.path.clone();
+    let log_path = shed_path.join("data/log");
+    let log_name = "shed";
+    rlib::logger::file("trace, rlib = debug", log_path.to_str().unwrap(), log_name).unwrap();
+    App {
+      cfg,
+      registry: Registry::new(shed_path.join("data/db")).unwrap(),
+    }
   }
 
-  pub fn serve(&self, ty: String) -> net::Result<()> {
-    let cfg = self.cfg.network.clone();
-    let _server = Server { cfg };
-    match ty.as_str() {
+  pub fn init(&self, path: String, json: bool) -> Result<()> {
+    println!("initializing shed...");
+    if json == true {
+      self.cfg.write(&path, Some("json")).unwrap();
+    } else {
+      self.cfg.write(&path, None).unwrap();
+    }
+    Ok(())
+  }
+
+  pub async fn serve(&self, engine: String) -> Result<()> {
+    match engine.as_str() {
       "hg" => {
-        println!("starting hgweb...");
-        hgweb(&self.cfg.hgrc)?;
+        hgweb(&self.cfg.hgrc.web)?;
       }
       "dm" => {
-        println!("waiting for dm...")
+        println!("waiting for dm...");
       }
       _ => {
-        eprintln!("unrecognized server type {:?}", ty)
+        error!("unrecognized server type!")
       }
     }
     Ok(())
   }
 
-  pub fn request(&self, ty: String, resource: String) -> net::Result<()> {
+  pub fn request(&self, ty: String, resource: String) -> Result<()> {
     let cfg = self.cfg.network.clone();
     let _client = Client { cfg };
     match ty.as_str() {
       "hg" => println!("requesting mercurial repo: {}", resource),
       "dm" => println!("sending message to: {}", resource),
-      _ => eprintln!("unrecognized server type {:?}", ty),
+      "stash" => println!("requesting resource: {}", resource),
+      "store" => println!("requesting resource: {}", resource),
+      "http" => {
+        println!("requesting resource over http: {}", &resource);
+      },
+      "ssh" => println!("requesting resource over ssh: {}", resource),
+      _ => error!("unrecognized server type {:?}", ty),
     }
     Ok(())
   }
-
 }

@@ -12,18 +12,17 @@ publish = ["crater"]
 
 [dependencies]
 # rlib
-logger = { version = "0.1.0", path = "../rlib/logger" }
-ctx = { version = "0.1.0", path = "../rlib/ctx" }
-util = { version = "0.1.0", path = "../rlib/util", features = ["cli"] }
-obj = { version = "0.1.0", path = "../rlib/obj", features = ["config", "hg"] }
-flate = { version = "0.1.0", path = "../rlib/flate" }
-db = { version = "0.1.0", path = "../rlib/db" }
-net = { version = "0.1.0", path = "../rlib/net", features = ["full"] }
-kala = { version = "0.1.0", path = "../rlib/kala", features = ["hg"] }
+rlib = { version = "0.1.0", path = "../rlib", features = ["logger", "ctx", "cli", "obj", "flate", "db", "net", "hg"] }
+tenex = { version = "0.1.0", path = "../tenex", features = ["ipapi"] }
 # contrib
 serde = { version = "1.0.128", features = ["derive"] }
 clap = "3.0.0-beta.4"
 crossterm = { version = "0.17", features = ["event-stream"] }
-# cursive = { version = "0.16" }
+cursive = { version = "0.16" }
+rustpython-vm = { version = "0.1.2", git = "https://github.com/RustPython/RustPython"}
+rustpython-parser = { version = "0.1.2", git = "https://github.com/RustPython/RustPython"}
+num-traits = "0.2"
+cfg-if = "1.0"
+
 [dev-dependencies]
 tempfile = { version = "3.2.0" }

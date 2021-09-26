@@ -1,11 +1,11 @@
-use util::cli::{AppSettings, Clap};
+use rlib::util::cli::{AppSettings, Clap};
 
 #[derive(Clap)]
 #[clap(version = "0.1.0", author = "ellis")]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct Opts {
-  #[clap(short, long, default_value = option_env!("SHED_CFG").unwrap_or("./cfg.ron"))]
-  pub config: String,
+  #[clap(short, long)]
+  pub config: Option<String>,
   #[clap(subcommand)]
   pub subcmd: Option<SubCommand>,
   pub input: Option<String>,
@@ -23,6 +23,8 @@ pub enum SubCommand {
   Status(Status),
   /// pull changesets
   Pull(Pull),
+  /// push changesets
+  Push(Push),
   /// persistent storage
   Store(Store),
   /// temporary storage
@@ -31,12 +33,22 @@ pub enum SubCommand {
   Publish(Publish),
   /// host network services
   Serve(Serve),
+  /// build a program or library
+  Build(Build),
+  /// documentation
+  Meta(Meta),
+  /// notes
+  Note(Note),
 }
 
 #[derive(Clap)]
 pub struct Init {
   #[clap(default_value = ".")]
-  pub input: String,
+  pub path: String,
+  #[clap(short, long)]
+  pub config: Option<String>,
+  #[clap(short, long)]
+  pub json: bool,
 }
 
 #[derive(Clap)]
@@ -57,12 +69,21 @@ pub struct Unpack {
 
 #[derive(Clap)]
 pub struct Status {
-  #[clap(short, long, default_value = "tree")]
-  pub view: String,
+  #[clap(default_value = ".")]
+  pub input: String,
+  #[clap(short, long)]
+  pub sys: bool,
 }
 #[derive(Clap)]
 pub struct Pull {
-  pub parent: Option<String>,
+  #[clap(default_value = ".")]
+  pub input: String,
+}
+
+#[derive(Clap)]
+pub struct Push {
+  #[clap(default_value = ".")]
+  pub input: String,
 }
 
 #[derive(Clap)]
@@ -74,6 +95,10 @@ pub struct Store {
 }
 
 #[derive(Clap)]
+pub struct Build {
+}
+
+#[derive(Clap)]
 pub struct Publish {
   #[clap(short, long, default_value = "current")]
   pub packages: Vec<String>,
@@ -81,8 +106,20 @@ pub struct Publish {
 
 #[derive(Clap)]
 pub struct Serve {
-  #[clap(short, long, default_value = "hg")]
-  pub ty: String,
-  #[clap(short, long, default_value = "current")]
+  #[clap(default_value = "http")]
+  pub engine: String,
+  #[clap(short, long)]
   pub packages: Option<Vec<String>>,
+}
+
+#[derive(Clap)]
+pub struct Meta {
+  #[clap(short, long)]
+  view: Option<String>,
+}
+
+#[derive(Clap)]
+pub struct Note {
+  #[clap(short, long)]
+  view: Option<String>,
 }
