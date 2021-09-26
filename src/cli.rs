@@ -39,6 +39,7 @@ pub enum SubCommand {
   Meta(Meta),
   /// notes
   Note(Note),
+  X(X),
 }
 
 #[derive(Clap)]
@@ -87,16 +88,13 @@ pub struct Push {
 }
 
 #[derive(Clap)]
-pub struct Stash {
-}
+pub struct Stash {}
 
 #[derive(Clap)]
-pub struct Store {
-}
+pub struct Store {}
 
 #[derive(Clap)]
-pub struct Build {
-}
+pub struct Build {}
 
 #[derive(Clap)]
 pub struct Publish {
@@ -122,4 +120,13 @@ pub struct Meta {
 pub struct Note {
   #[clap(short, long)]
   view: Option<String>,
+}
+
+#[derive(Clap)]
+pub struct X {
+  pub repl: Option<String>, // interpreter to use
+  #[clap(short, long)]
+  pub file: Option<String>,
+  #[clap(short, long)]
+  pub cmd: Option<String>,
 }

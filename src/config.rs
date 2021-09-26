@@ -3,31 +3,34 @@
 //! Shed configuration layer.
 
 use std::{
+  collections::HashMap,
   fs,
   path::{Path, PathBuf},
-  collections::HashMap,
 };
 
 use crate::{Configure, Objective};
-use rlib::{logger::log::error, obj::{
-  Result,
-  config::{
-    network::NetworkConfig,
-    package::PackageConfig,
-    repo::hg::{MercurialConfig, HgwebConfig},
+use rlib::{
+  logger::log::error,
+  obj::{
+    config::{
+      network::NetworkConfig,
+      package::PackageConfig,
+      repo::hg::{HgwebConfig, MercurialConfig},
+    },
+    ron::de::from_reader,
+    Result,
   },
-  ron::de::from_reader,
-}};
+};
 
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub path: PathBuf, // the shed path on disk
-    pub owner: Option<String>,
-    pub src: Vec<PackageConfig>,
-    pub network: NetworkConfig,
-    pub hgrc: MercurialConfig,
+  pub path: PathBuf, // the shed path on disk
+  pub owner: Option<String>,
+  pub src: Vec<PackageConfig>,
+  pub network: NetworkConfig,
+  pub hgrc: MercurialConfig,
 }
 
 impl Default for Config {
@@ -41,7 +44,9 @@ impl Default for Config {
       web: HgwebConfig::default(),
     };
     Config {
-      path: PathBuf::from(option_env!("SHED").unwrap_or(std::env::current_dir().unwrap().to_str().unwrap())),
+      path: PathBuf::from(
+        option_env!("SHED").unwrap_or(std::env::current_dir().unwrap().to_str().unwrap()),
+      ),
       owner: Some(env!("USER").to_string()),
       src: vec![],
       network: NetworkConfig::default(),
@@ -56,23 +61,15 @@ impl Config {
     let f_path = &path.join(".shed");
     let file = fs::File::create(f_path)?;
     match ext {
-      Some(i) => {
-        match i {
-          "json" => {
-            self.to_json_writer(file)?
-          },
-          "ron" => {
-            self.to_ron_writer(file)?
-          },
-          i => {
-            error!("extension '{}' not understood", i);
-            std::process::exit(1);
-          },
+      Some(i) => match i {
+        "json" => self.to_json_writer(file)?,
+        "ron" => self.to_ron_writer(file)?,
+        i => {
+          error!("extension '{}' not understood", i);
+          std::process::exit(1);
         }
       },
-      None => {
-        self.to_ron_writer(file)?
-      },
+      None => self.to_ron_writer(file)?,
     }
     println!("wrote config to {}", f_path.display());
     Ok(())

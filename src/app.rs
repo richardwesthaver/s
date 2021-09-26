@@ -1,11 +1,16 @@
 use crate::Config;
-use rlib::{db::registry::Registry, kala::cmd::hg::hgweb, logger::log::error, net::{
+use rlib::{
+  db::registry::Registry,
+  kala::cmd::hg::hgweb,
+  logger::log::error,
+  net::{
     Client,
     Result,
-//    engine::{
-//      dns::{self, resolver::Lookup},
-//      http::{service, Router, ServeDir}
-}};
+    /*    engine::{
+     *      dns::{self, resolver::Lookup},
+     *      http::{service, Router, ServeDir} */
+  },
+};
 
 use std::path::PathBuf;
 
@@ -38,11 +43,11 @@ impl App {
 
   pub async fn serve(&self, engine: String) -> Result<()> {
     match engine.as_str() {
-      "hg" => {
-        hgweb(&self.cfg.hgrc.web)?;
-      }
+      "hg" => hgweb(&self.cfg.hgrc)
+        .await
+        .expect("encountered error in hg_serve process"),
       "dm" => {
-        println!("waiting for dm...");
+        println!("waiting for dm...")
       }
       _ => {
         error!("unrecognized server type!")
@@ -61,7 +66,7 @@ impl App {
       "store" => println!("requesting resource: {}", resource),
       "http" => {
         println!("requesting resource over http: {}", &resource);
-      },
+      }
       "ssh" => println!("requesting resource over ssh: {}", resource),
       _ => error!("unrecognized server type {:?}", ty),
     }
