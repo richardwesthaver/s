@@ -66,7 +66,7 @@ async fn main() -> Result<()> {
         }
       },
       ("status", opt) => {
-        if opt.is_present("host") {
+        if opt.is_present("sys") {
           describe_host();
         } else if opt.is_present("usb") {
           usb_devices(None)?;
@@ -139,7 +139,7 @@ async fn main() -> Result<()> {
       }
     }
   } else {
-    println!("shed v0.1.0");
+    debug!("no command supplied");
   }
   Ok(())
 }

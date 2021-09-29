@@ -119,11 +119,15 @@ fn create_settings(file: &Option<&str>, cmd: &Option<&str>, module: &Option<&str
   }
 
   let argv = if let Some(script) = file {
-    vec![script.to_string()]
+    script.split_whitespace().map(ToOwned::to_owned).collect::<Vec<String>>()
   } else if let Some(command) = cmd {
-    vec![command.to_string()]
+    std::iter::once("-c".to_owned())
+      .chain(command.split_whitespace().map(ToOwned::to_owned))
+      .collect::<Vec<String>>()
   } else if let Some(module) = module {
-    vec![module.to_string()]
+    std::iter::once("PLACEHOLDER".to_owned())
+      .chain(module.split_whitespace().skip(1).map(ToOwned::to_owned))
+      .collect::<Vec<String>>()
   } else {
     vec!["".to_string()]
   };

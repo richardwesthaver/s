@@ -2,10 +2,12 @@ use rlib::util::cli::{AppSettings, App, Arg};
 pub fn build_cli() -> App<'static> {
   App::new("shed")
     .author("ellis <ellis@rwest.io>")
-    .about("a hacker's home")
+    .about("shed ← tool≍⌜⍋box")
     .setting(AppSettings::ColorAuto)
+    .setting(AppSettings::ColoredHelp)
     .setting(AppSettings::DisableVersionForSubcommands)
     .setting(AppSettings::TrailingVarArg)
+    .setting(AppSettings::ArgRequiredElseHelp)
     .arg(Arg::new("config")
          .short('c').long("config")
          .value_name("RON|JSON|BIN")
@@ -18,8 +20,10 @@ pub fn build_cli() -> App<'static> {
           .arg(Arg::new("fmt").takes_value(true).short('f')
                .possible_values(&["json", "ron", "bin"])),
         App::new("status").about("print basic info")
-          .arg(Arg::new("sys").short('s').about("system info"))
-          .arg(Arg::new("ip").long("ip").about("my IP"))
+          .arg(Arg::new("sys").long("sys").short('s').about("system info"))
+          .arg(Arg::new("ip").long("ip").short('i').about("my ip"))
+          .arg(Arg::new("usb").long("usb").short('u').about("usb devices"))
+          .arg(Arg::new("midi").long("midi").short('m').about("midi devices"))
           .arg(Arg::new("weather").short('w').about("weather report")),
         App::new("pack")
           .arg(Arg::new("input").takes_value(true))
@@ -41,7 +45,7 @@ pub fn build_cli() -> App<'static> {
                .possible_values(&["hg","dm", "ftp"]).about("network backend")),
         App::new("build").about("build scripts"),
         App::new("x").about("do things with runtimes")
-          .arg(Arg::new("runtime").takes_value(true).default_value("dmc")
+          .arg(Arg::new("repl").takes_value(true).default_value("dmc")
                .possible_values(&["dmc", "py", "bqn", "k", "apl"]))
           .arg(Arg::new("command").takes_value(true).multiple_values(true)
                .short('x').about("execute a command"))
