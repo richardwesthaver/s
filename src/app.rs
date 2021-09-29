@@ -24,25 +24,26 @@ impl App {
     let shed_path: PathBuf = cfg.path.clone();
     let log_path = shed_path.join("data/log");
     let log_name = "shed";
-    rlib::logger::file("trace, rlib = debug", log_path.to_str().unwrap(), log_name).unwrap();
+    rlib::logger::file("info, rlib = trace", log_path.to_str().unwrap(), log_name).unwrap();
     App {
       cfg,
       registry: Registry::new(shed_path.join("data/db")).unwrap(),
     }
   }
 
-  pub fn init(&self, path: String, json: bool) -> Result<()> {
+  pub fn init(&self, path: &str, fmt: Option<&str>) -> Result<()> {
     println!("initializing shed...");
-    if json == true {
-      self.cfg.write(&path, Some("json")).unwrap();
-    } else {
-      self.cfg.write(&path, None).unwrap();
+    match fmt {
+      Some("ron") | None => self.cfg.write(path,None).unwrap(),
+      Some("json") => self.cfg.write(path, Some("json")).unwrap(),
+      Some("bin") => unimplemented!(),
+      Some(_) => error!("unknown configuration type"),
     }
     Ok(())
   }
 
-  pub async fn serve(&self, engine: String) -> Result<()> {
-    match engine.as_str() {
+  pub async fn serve(&self, engine: &str) -> Result<()> {
+    match engine {
       "hg" => hgweb(&self.cfg.hgrc)
         .await
         .expect("encountered error in hg_serve process"),
@@ -56,10 +57,10 @@ impl App {
     Ok(())
   }
 
-  pub fn request(&self, ty: String, resource: String) -> Result<()> {
+  pub async fn request(&self, ty: &str, resource: &str) -> Result<()> {
     let cfg = self.cfg.network.clone();
     let _client = Client { cfg };
-    match ty.as_str() {
+    match ty {
       "hg" => println!("requesting mercurial repo: {}", resource),
       "dm" => println!("sending message to: {}", resource),
       "stash" => println!("requesting resource: {}", resource),

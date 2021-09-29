@@ -7,41 +7,30 @@
 //!
 //! This program is a development tool I use to manage such
 //! structures.
-
 mod app;
-mod cli;
-mod config;
-mod repl;
-mod ui;
-
-// crate
 use app::App;
-use cli::{Opts, SubCommand};
+mod cli;
+use cli::build_cli;
+mod config;
 use config::Config;
+mod repl;
+use repl::{dmc, python};
+mod ui;
 use ui::{stash, store};
 
 // rlib
 use rlib::{
   ctx, flate,
-  kala::cmd::midi::list_midi_ports,
-  kala::cmd::sys::{describe_host, usb_devices},
-  logger::log::{debug, info},
-  obj::config::Configure,
-  obj::Objective,
-  util::cli::Clap,
-  util::Result,
-};
-
-use tenex::ipapi::get_ip;
-
-// std
-use std::path::Path;
-
+  kala::cmd::{midi::list_midi_ports, sys::{describe_host,usb_devices}},
+  logger::log::{debug, info, error},
+  obj::Objective, obj::config::Configure,
+  util::Result};
+// tenex
+use tenex::{ipapi::get_ip,nws::weather_report};
 #[ctx::main]
 async fn main() -> Result<()> {
-  let opts: Opts = Opts::parse();
-
-  let cfg = match opts.config {
+  let cli = build_cli().version(env!("DEMON_VERSION")).get_matches();
+  let cfg = match cli.value_of("config") {
     Some(cfg) => {
       debug!("loading config: {}", cfg);
       Config::load(cfg)?
@@ -54,81 +43,87 @@ async fn main() -> Result<()> {
 
   let app = App::new(cfg);
 
-  if let Some(i) = opts.subcmd {
-    match i {
-      SubCommand::Pack(i) => {
-        println!("pack!({} => {}) ", &i.input, &i.output);
-        println!("  input: {}", &i.input);
-        println!("  output: {}", &i.output);
-        flate::pack(&i.input, &i.output, None);
-      }
-      SubCommand::Unpack(i) => {
-        println!("running unpack...");
-        println!("  input: {}", i.input);
-        println!("  output: {}", i.output);
-        if i.replace {
-          flate::unpack_replace(Path::new(&i.input), Path::new(&i.output));
+  if let Some(cmd) = cli.subcommand() {
+    match cmd {
+      ("pack", opt) => {
+        let i = &opt.value_of("input").unwrap();
+        let o = &opt.value_of("output").unwrap();
+        println!("pack!({} => {}) ", i,o);
+        println!("  input: {}", i);
+        println!("  output: {}", i);
+        flate::pack(i,o,None);
+      },
+      ("unpack", opt) => {
+        let i = &opt.value_of("input").unwrap();
+        let o = &opt.value_of("output").unwrap();
+        println!("unpack!({} => {}) ", i,o);
+        println!("  input: {}", i);
+        println!("  output: {}", i);
+        if opt.is_present("replace") {
+          flate::unpack_replace(i,o);
         } else {
-          flate::unpack(Path::new(&i.input), Path::new(&i.output));
+          flate::unpack(i,o);
         }
-      }
-      SubCommand::Status(i) => {
-        if i.sys == true {
+      },
+      ("status", opt) => {
+        if opt.is_present("host") {
           describe_host();
-          println!();
+        } else if opt.is_present("usb") {
           usb_devices(None)?;
-          list_midi_ports()?;
+        } else if opt.is_present("ip") {
           get_ip().await?;
+        } else if opt.is_present("midi") {
+          list_midi_ports()?;
+        } else if opt.is_present("weather") {
+          weather_report(41.3557, -72.0995).await?;
         }
+      },
+      ("init", opt) => {
+        app.init(opt.value_of("path").unwrap(), opt.value_of("fmt"))?;
       }
-      SubCommand::Init(i) => {
-        app.init(i.path, i.json)?; // i.json is a bool
-      }
-      SubCommand::Serve(i) => {
+      ("serve", opt) => {
         println!("starting server...");
-        if let Some(p) = i.packages {
+        if let Some(p) = opt.value_of("package") {
           println!("{:#?}", p);
         }
-        app.serve(i.engine).await?;
+        app.serve(opt.value_of("engine").unwrap()).await?;
       }
-      SubCommand::Pull(i) => {
-        let parent = i.input;
+      ("pull", opt) => {
+        let parent = match opt.value_of("from") {
+          Some(i) => i,
+          None => ".",
+        };
         println!("pulling from {}...", parent);
-        app.request("hg".to_string(), parent)?;
+        app.request("hg", parent).await?;
       }
-      SubCommand::Push(i) => {
-        let parent = i.input;
-        println!("pushing package {:#?}...", parent);
+      ("push", _opt) => {
+        unimplemented!();
       }
-      SubCommand::Publish(i) => {
-        println!("publishing packages {:#?}...", i.packages);
-      }
-      SubCommand::Store(_) => {
+      ("store", _opt) => {
         println!("running store...");
         store();
       }
-      SubCommand::Stash(_) => {
+      ("stash", _opt) => {
         println!("running stash...");
         stash();
       }
-      SubCommand::Build(_) => {
+      ("build", _opt) => {
         println!("starting build...");
       }
-      SubCommand::Meta(_) => {}
-      SubCommand::Note(_) => {}
-      SubCommand::X(i) => {
-        if let Some(rp) = i.repl {
-          match rp.as_str() {
+      ("x", opt) => {
+        let m = (opt.value_of("script"), opt.value_of("command"), opt.value_of("module"));
+        if let Some(rp) = opt.value_of("repl") {
+          match rp {
             "python" | "py" => {
               println!("running python interpreter");
-              repl::python::run(|_vm| {}, i.file, i.cmd);
+              python::run(|_vm| {}, m.0, m.1, m.2);
             }
             "bqn" => {
               println!("running BQN interpreter");
             }
             "dmc" => {
               println!("running DMC interpreter");
-              repl::dmc::run()?;
+              dmc::run()?;
             }
             _ => {
               println!("unknown REPL type");
@@ -136,8 +131,11 @@ async fn main() -> Result<()> {
           }
         } else {
           println!("running the default interpreter: DMC");
-          repl::dmc::run()?;
+          dmc::run()?;
         }
+      },
+      (&_, _) => {
+        error!("cmd not found");
       }
     }
   } else {

@@ -1,132 +1,53 @@
-use rlib::util::cli::{AppSettings, Clap};
-
-#[derive(Clap)]
-#[clap(version = "0.1.0", author = "ellis")]
-#[clap(setting = AppSettings::ColoredHelp)]
-pub struct Opts {
-  #[clap(short, long)]
-  pub config: Option<String>,
-  #[clap(subcommand)]
-  pub subcmd: Option<SubCommand>,
-  pub input: Option<String>,
-}
-
-#[derive(Clap)]
-pub enum SubCommand {
-  /// bootstrap a shed
-  Init(Init),
-  /// build package
-  Pack(Pack),
-  /// extract package
-  Unpack(Unpack),
-  /// report current status
-  Status(Status),
-  /// pull changesets
-  Pull(Pull),
-  /// push changesets
-  Push(Push),
-  /// persistent storage
-  Store(Store),
-  /// temporary storage
-  Stash(Stash),
-  /// publish documentation
-  Publish(Publish),
-  /// host network services
-  Serve(Serve),
-  /// build a program or library
-  Build(Build),
-  /// documentation
-  Meta(Meta),
-  /// notes
-  Note(Note),
-  X(X),
-}
-
-#[derive(Clap)]
-pub struct Init {
-  #[clap(default_value = ".")]
-  pub path: String,
-  #[clap(short, long)]
-  pub config: Option<String>,
-  #[clap(short, long)]
-  pub json: bool,
-}
-
-#[derive(Clap)]
-pub struct Pack {
-  pub input: String,
-  #[clap(default_value = ".")]
-  pub output: String,
-}
-
-#[derive(Clap)]
-pub struct Unpack {
-  pub input: String,
-  #[clap(default_value = ".")]
-  pub output: String,
-  #[clap(short, long)]
-  pub replace: bool,
-}
-
-#[derive(Clap)]
-pub struct Status {
-  #[clap(default_value = ".")]
-  pub input: String,
-  #[clap(short, long)]
-  pub sys: bool,
-}
-#[derive(Clap)]
-pub struct Pull {
-  #[clap(default_value = ".")]
-  pub input: String,
-}
-
-#[derive(Clap)]
-pub struct Push {
-  #[clap(default_value = ".")]
-  pub input: String,
-}
-
-#[derive(Clap)]
-pub struct Stash {}
-
-#[derive(Clap)]
-pub struct Store {}
-
-#[derive(Clap)]
-pub struct Build {}
-
-#[derive(Clap)]
-pub struct Publish {
-  #[clap(short, long, default_value = "current")]
-  pub packages: Vec<String>,
-}
-
-#[derive(Clap)]
-pub struct Serve {
-  #[clap(default_value = "http")]
-  pub engine: String,
-  #[clap(short, long)]
-  pub packages: Option<Vec<String>>,
-}
-
-#[derive(Clap)]
-pub struct Meta {
-  #[clap(short, long)]
-  view: Option<String>,
-}
-
-#[derive(Clap)]
-pub struct Note {
-  #[clap(short, long)]
-  view: Option<String>,
-}
-
-#[derive(Clap)]
-pub struct X {
-  pub repl: Option<String>, // interpreter to use
-  #[clap(short, long)]
-  pub file: Option<String>,
-  #[clap(short, long)]
-  pub cmd: Option<String>,
-}
+use rlib::util::cli::{AppSettings, App, Arg};
+pub fn build_cli() -> App<'static> {
+  App::new("shed")
+    .author("ellis <ellis@rwest.io>")
+    .about("a hacker's home")
+    .setting(AppSettings::ColorAuto)
+    .setting(AppSettings::DisableVersionForSubcommands)
+    .setting(AppSettings::TrailingVarArg)
+    .arg(Arg::new("config")
+         .short('c').long("config")
+         .value_name("RON|JSON|BIN")
+         .about("override configuration values")
+         .takes_value(true).global(true))
+    .subcommands(
+      vec![
+        App::new("init").about("system: ON")
+          .arg(Arg::new("path").takes_value(true).default_value("."))
+          .arg(Arg::new("fmt").takes_value(true).short('f')
+               .possible_values(&["json", "ron", "bin"])),
+        App::new("status").about("print basic info")
+          .arg(Arg::new("sys").short('s').about("system info"))
+          .arg(Arg::new("ip").long("ip").about("my IP"))
+          .arg(Arg::new("weather").short('w').about("weather report")),
+        App::new("pack")
+          .arg(Arg::new("input").takes_value(true))
+          .arg(Arg::new("output").takes_value(true).default_value(".")),
+        App::new("unpack")
+          .arg(Arg::new("input").takes_value(true))
+          .arg(Arg::new("output").takes_value(true).default_value("."))
+          .arg(Arg::new("replace").short('r').about("consume input package")),
+        App::new("pull").about("fetch remote changes")
+          .arg(Arg::new("from").takes_value(true).about("parent to pull from")),
+        App::new("push").about("commit changes to upstream")
+          .arg(Arg::new("to").takes_value(true).about("parent to push to")),
+        App::new("store").about("shared block storage"),
+        App::new("stash").about("local storage"),
+        App::new("serve").about("network hosting for shed modules")
+          .arg(Arg::new("package").takes_value(true).multiple_values(true)
+               .short('p').about("specify packages to serve"))
+          .arg(Arg::new("engine").takes_value(true)
+               .possible_values(&["hg","dm", "ftp"]).about("network backend")),
+        App::new("build").about("build scripts"),
+        App::new("x").about("do things with runtimes")
+          .arg(Arg::new("runtime").takes_value(true).default_value("dmc")
+               .possible_values(&["dmc", "py", "bqn", "k", "apl"]))
+          .arg(Arg::new("command").takes_value(true).multiple_values(true)
+               .short('x').about("execute a command"))
+          .arg(Arg::new("module").takes_value(true).multiple_values(true)
+               .short('m').about("execute a module"))
+          .arg(Arg::new("script").takes_value(true)
+               .alias("file").short('s').short_alias('f')
+               .about("execute a script")),
+      ])}

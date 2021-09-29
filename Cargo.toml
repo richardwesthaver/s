@@ -12,18 +12,22 @@ publish = ["crater"]
 
 [dependencies]
 # rlib
-rlib = { version = "0.1.0", path = "../rlib", features = ["logger", "ctx", "cli", "obj", "flate", "db", "net", "hg"] }
-tenex = { version = "0.1.0", path = "../tenex", features = ["ipapi"] }
-
+rlib = { version = "0.1.0", path = "../rlib", features = ["logger", "ctx", "cli", "bs", "obj", "flate", "db", "net", "hg"] }
+tenex = { version = "0.1.0", path = "../tenex", features = ["ipapi", "nws"] }
 # contrib
 libc = "0.2"
 serde = { version = "1.0.128", features = ["derive"] }
-clap = "3.0.0-beta.4"
+clap = { version = "3.0.0-beta.4", features = ["suggestions", "color", "derive", "env", "cargo", "unicode_help", "wrap_help"] }
 crossterm = { version = "0.17", features = ["event-stream"] }
 cursive = { version = "0.16" }
-rustpython-vm = { version = "0.1.2", git = "https://github.com/RustPython/RustPython", features = ["ssl-vendor", "freeze-stdlib", "jit"] }
+rustpython-vm = { version = "0.1.2", git = "https://github.com/RustPython/RustPython", features = ["ssl", "zlib"]}
 rustpython-parser = { version = "0.1.2", git = "https://github.com/RustPython/RustPython"}
+rustpython-compiler = { version = "0.1.2", git = "https://github.com/RustPython/RustPython"}
+pylib = { version = "0.1.0", git = "https://github.com/RustPython/RustPython", package="rustpython-pylib"}
 rustyline-derive = { version = "0.5" }
 rustyline = { version = "9.0.0" }
 num-traits = "0.2"
 cfg-if = "1.0"
+[build-dependencies]
+rlib = { version = "0.1.0", path = "../rlib", features = ["bs", "cli"] }
+#dirs = { package = "dirs-next", version = "2.0.0" }

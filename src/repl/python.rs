@@ -15,11 +15,11 @@ use std::str::FromStr;
 /// The main cli of the `rustpython` interpreter. This function will
 /// exit with `process::exit()` based on the return code of the python
 /// code ran through the cli.
-pub fn run<F>(init: F, file: Option<String>, cmd: Option<String>) -> !
+pub fn run<F>(init: F, file: Option<&str>, cmd: Option<&str>, module: Option<&str>) -> !
 where
   F: FnOnce(&mut VirtualMachine),
 {
-  let settings = create_settings(&file, &cmd);
+  let settings = create_settings(&file, &cmd, &module);
   let init_param = InitParameter::External;
 
   let interp = Interpreter::new_with_init(settings, |vm| {
@@ -28,7 +28,7 @@ where
   });
 
   let exitcode = interp.enter(move |vm| {
-    let res = run_rustpython(vm, &file, &cmd);
+    let res = run_rustpython(vm, &file, &cmd, &module);
     flush_std(vm);
     // See if any exception leaked out:
     let exitcode = match res {
@@ -89,9 +89,9 @@ fn flush_std(vm: &VirtualMachine) {
 /// Create settings by examining command line arguments and environment
 /// variables.
 /// refer to https://github.com/RustPython/RustPython/blob/ec5b6b4e8783b211344bce4b5cb0ae09a1572ec3/vm/src/vm.rs#L137 for PySettings fields
-fn create_settings(file: &Option<String>, cmd: &Option<String>) -> PySettings {
+fn create_settings(file: &Option<&str>, cmd: &Option<&str>, module: &Option<&str>) -> PySettings {
   let mut settings = PySettings {
-    interactive: !cmd.is_some() && !file.is_some(),
+    interactive: !cmd.is_some() && !file.is_some() && !module.is_some(),
     ..Default::default()
   };
 
@@ -104,7 +104,6 @@ fn create_settings(file: &Option<String>, cmd: &Option<String>) -> PySettings {
       .path_list
       .extend(std::env::split_paths(paths).map(|path| path.into_os_string().into_string().unwrap()))
   } else {
-    #[cfg(all(feature = "pylib", not(feature = "freeze-stdlib")))]
     settings.path_list.push(pylib::LIB_PATH.to_owned());
   }
 
@@ -120,9 +119,11 @@ fn create_settings(file: &Option<String>, cmd: &Option<String>) -> PySettings {
   }
 
   let argv = if let Some(script) = file {
-    vec![script.to_owned()]
+    vec![script.to_string()]
   } else if let Some(command) = cmd {
-    vec![command.to_owned()]
+    vec![command.to_string()]
+  } else if let Some(module) = module {
+    vec![module.to_string()]
   } else {
     vec!["".to_string()]
   };
@@ -172,11 +173,12 @@ fn get_paths(env_variable_name: &str) -> impl Iterator<Item = String> + '_ {
 
 fn run_rustpython(
   vm: &VirtualMachine,
-  file: &Option<String>,
-  cmd: &Option<String>,
+  file: &Option<&str>,
+  cmd: &Option<&str>,
+  module: &Option<&str>,
 ) -> PyResult<()> {
   let scope = vm.new_scope_with_builtins();
-  let main_module = vm.new_module("__main__", scope.globals.clone());
+  let main_module = vm.new_module("__main__", scope.globals.clone(), None);
   main_module
     .dict()
     .and_then(|d| {
@@ -203,7 +205,7 @@ fn run_rustpython(
 
   // Figure out if a -c option was given:
   if let Some(command) = cmd {
-    match command.as_str() {
+    match command.as_ref() {
       "install_pip" => {
         let get_getpip = rustpython_vm::py_compile!(
           source = r#"\
@@ -222,11 +224,13 @@ __import__("io").TextIOWrapper(
         _run_string(vm, scope, getpip_code.as_str(), "get-pip.py".to_owned())?;
       }
       _ => {
-        run_command(vm, scope, command.to_owned())?;
+        run_command(vm, scope, command.to_string())?;
       }
     }
   } else if let Some(filename) = file {
     run_script(vm, scope.clone(), filename)?;
+  } else if let Some(module) = module {
+    run_module(vm, module)?;
   } else {
     println!("Welcome to the magnificent RustPython interpreter \u{1f631} \u{1f596}");
     run_shell(vm, scope)?;
