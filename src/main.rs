@@ -21,7 +21,7 @@ use ui::{stash, store};
 // rlib
 use rlib::{
   ctx, flate,
-  kala::cmd::{midi::list_midi_ports, sys::{describe_host,usb_devices}},
+  kala::cmd::{midi::list_midi_ports, sys::{describe_host,usb_devices}, repl::{bqn, k, erl, dyalog}},
   logger::log::{debug, info, error},
   obj::Objective, obj::config::Configure,
   util::Result};
@@ -120,6 +120,19 @@ async fn main() -> Result<()> {
             }
             "bqn" => {
               println!("running BQN interpreter");
+              bqn().await;
+            }
+            "k" => {
+              println!("running ngn/k interpreter");
+              k().await;
+            }
+            "erl" => {
+              println!("running Erlang interpreter");
+              erl().await;
+            }
+            "apl" => {
+              println!("running APL interpreter: Dyalog");
+              dyalog().await;
             }
             "dmc" => {
               println!("running DMC interpreter");

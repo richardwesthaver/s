@@ -46,7 +46,7 @@ pub fn build_cli() -> App<'static> {
         App::new("build").about("build scripts"),
         App::new("x").about("do things with runtimes")
           .arg(Arg::new("repl").takes_value(true).default_value("dmc")
-               .possible_values(&["dmc", "py", "bqn", "k", "apl"]))
+               .possible_values(&["dmc", "py", "bqn", "k", "apl", "erl"]))
           .arg(Arg::new("command").takes_value(true).multiple_values(true)
                .short('x').about("execute a command"))
           .arg(Arg::new("module").takes_value(true).multiple_values(true)
