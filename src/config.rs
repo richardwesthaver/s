@@ -9,13 +9,13 @@ use std::{
 };
 
 use crate::{Configure, Objective};
+
 use rlib::{
   logger::log::error,
   obj::{
     config::{
-      network::NetworkConfig,
-      package::PackageConfig,
-      repo::hg::{HgwebConfig, MercurialConfig},
+      NetworkConfig, PackageConfig,
+      HgwebConfig, MercurialConfig,
     },
     ron::de::from_reader,
     Result,

@@ -48,17 +48,13 @@ async fn main() -> Result<()> {
       ("pack", opt) => {
         let i = &opt.value_of("input").unwrap();
         let o = &opt.value_of("output").unwrap();
-        println!("pack!({} => {}) ", i,o);
-        println!("  input: {}", i);
-        println!("  output: {}", i);
+        println!("packing dir: {} => {} ", i,o);
         flate::pack(i,o,None);
       },
       ("unpack", opt) => {
         let i = &opt.value_of("input").unwrap();
         let o = &opt.value_of("output").unwrap();
-        println!("unpack!({} => {}) ", i,o);
-        println!("  input: {}", i);
-        println!("  output: {}", i);
+        println!("unpacking pkg: {} => {} ", i,o);
         if opt.is_present("replace") {
           flate::unpack_replace(i,o);
         } else {

@@ -15,9 +15,9 @@ pub fn build_cli() -> App<'static> {
          .takes_value(true).global(true))
     .subcommands(
       vec![
-        App::new("init").about("system: ON")
+        App::new("init").about("initialize the shed")
           .arg(Arg::new("path").takes_value(true).default_value("."))
-          .arg(Arg::new("fmt").takes_value(true).short('f')
+          .arg(Arg::new("fmt").takes_value(true).short('f').about("config format")
                .possible_values(&["json", "ron", "bin"])),
         App::new("status").about("print basic info")
           .arg(Arg::new("sys").long("sys").short('s').about("system info"))
@@ -38,12 +38,12 @@ pub fn build_cli() -> App<'static> {
           .arg(Arg::new("to").takes_value(true).about("parent to push to")),
         App::new("store").about("shared block storage"),
         App::new("stash").about("local storage"),
-        App::new("serve").about("network hosting for shed modules")
+        App::new("serve").about("network services")
           .arg(Arg::new("package").takes_value(true).multiple_values(true)
                .short('p').about("specify packages to serve"))
           .arg(Arg::new("engine").takes_value(true)
                .possible_values(&["hg","dm", "ftp"]).about("network backend")),
-        App::new("build").about("build scripts"),
+        App::new("build").about("build scripts").short_flag('b'),
         App::new("x").about("do things with runtimes")
           .arg(Arg::new("repl").takes_value(true).default_value("dmc")
                .possible_values(&["dmc", "py", "bqn", "k", "apl", "erl"]))

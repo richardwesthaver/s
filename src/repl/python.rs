@@ -3,7 +3,7 @@ use rlib::kala::cmd::input::rustyline;
 use rlib::logger::log::{debug, error, warn};
 use rustpython_vm::builtins::{PyDictRef, PyStrRef};
 use rustpython_vm::{
-  builtins::PyInt, compile, exceptions::print_exception, match_class, scope::Scope, sysmodule,
+  builtins::PyInt, compile, exceptions::print_exception, match_class, scope::Scope, stdlib::sys,
   InitParameter, Interpreter, ItemProtocol, PyResult, PySettings, TypeProtocol, VirtualMachine,
 };
 use rustpython_vm::{function::ArgIterable, TryFromObject};
@@ -78,10 +78,10 @@ where
 }
 
 fn flush_std(vm: &VirtualMachine) {
-  if let Ok(stdout) = sysmodule::get_stdout(vm) {
+  if let Ok(stdout) = sys::get_stdout(vm) {
     let _ = vm.call_method(&stdout, "flush", ());
   }
-  if let Ok(stderr) = sysmodule::get_stderr(vm) {
+  if let Ok(stderr) = sys::get_stderr(vm) {
     let _ = vm.call_method(&stderr, "flush", ());
   }
 }
@@ -310,7 +310,7 @@ use rustpython_parser::error::{LexicalErrorType, ParseErrorType};
 use rustpython_vm::readline::{Readline, ReadlineResult};
 use rustpython_vm::{
   compile::{CompileError, CompileErrorType},
-  exceptions::PyBaseExceptionRef,
+  builtins::PyBaseExceptionRef,
 };
 
 enum ShellExecResult {
