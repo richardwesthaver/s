@@ -119,7 +119,10 @@ fn create_settings(file: &Option<&str>, cmd: &Option<&str>, module: &Option<&str
   }
 
   let argv = if let Some(script) = file {
-    script.split_whitespace().map(ToOwned::to_owned).collect::<Vec<String>>()
+    script
+      .split_whitespace()
+      .map(ToOwned::to_owned)
+      .collect::<Vec<String>>()
   } else if let Some(command) = cmd {
     std::iter::once("-c".to_owned())
       .chain(command.split_whitespace().map(ToOwned::to_owned))
@@ -309,8 +312,8 @@ fn run_script(vm: &VirtualMachine, scope: Scope, script_file: &str) -> PyResult<
 use rustpython_parser::error::{LexicalErrorType, ParseErrorType};
 use rustpython_vm::readline::{Readline, ReadlineResult};
 use rustpython_vm::{
-  compile::{CompileError, CompileErrorType},
   builtins::PyBaseExceptionRef,
+  compile::{CompileError, CompileErrorType},
 };
 
 enum ShellExecResult {

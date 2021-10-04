@@ -23,15 +23,22 @@ use ui::{stash, store};
 //rlib
 use rlib::{
   ctx, flate,
-  kala::cmd::{midi::list_midi_ports, sys::{describe_host,usb_devices}, repl::{bqn, k, k9, erl, dyalog, gnu_apl, lua}, hg::hg},
-  logger::log::{debug, info, error},
-  obj::Objective, obj::config::Configure,
-  util::Result};
+  kala::cmd::{
+    hg::hg,
+    midi::list_midi_ports,
+    repl::{bqn, dyalog, erl, gnu_apl, k, k9, lua},
+    sys::{describe_host, usb_devices},
+  },
+  logger::log::{debug, error, info},
+  obj::config::Configure,
+  obj::Objective,
+  util::Result,
+};
 //tenex
-use tenex::{ipapi::get_ip,nws::weather_report};
+use tenex::{ipapi::get_ip, nws::weather_report};
 
 //std
-use {std::{env, path::Path}};
+use std::{env, path::Path};
 
 #[ctx::main]
 async fn main() -> Result<()> {
@@ -54,19 +61,19 @@ async fn main() -> Result<()> {
       ("pack", opt) => {
         let i = &opt.value_of("input").unwrap();
         let o = &opt.value_of("output").unwrap();
-        println!("packing dir: {} => {} ", i,o);
-        flate::pack(i,o,None);
-      },
+        println!("packing dir: {} => {} ", i, o);
+        flate::pack(i, o, None);
+      }
       ("unpack", opt) => {
         let i = &opt.value_of("input").unwrap();
         let o = &opt.value_of("output").unwrap();
-        println!("unpacking pkg: {} => {} ", i,o);
+        println!("unpacking pkg: {} => {} ", i, o);
         if opt.is_present("replace") {
-          flate::unpack_replace(i,o);
+          flate::unpack_replace(i, o);
         } else {
-          flate::unpack(i,o);
+          flate::unpack(i, o);
         }
-      },
+      }
       ("status", opt) => {
         if opt.is_present("sys") {
           describe_host();
@@ -85,13 +92,13 @@ async fn main() -> Result<()> {
           hg(vec!["summary"]).await;
           if opt.is_present("remote") {
             println!("#@! status :: \n");
-            hg(vec!["status","--remote"]).await; //needs error handling
+            hg(vec!["status", "--remote"]).await; //needs error handling
           } else {
             hg(vec!["status"]).await;
           }
           env::set_current_dir(cd)?;
         }
-      },
+      }
       ("init", opt) => {
         app.init(opt.value_of("path").unwrap(), opt.value_of("fmt"))?;
       }
@@ -125,12 +132,19 @@ async fn main() -> Result<()> {
         println!("starting build...");
         match opt.value_of("pkg") {
           Some(i) => app.build(opt.value_of("target").unwrap_or("o"), i).await?,
-          None => app.build(opt.value_of("target").unwrap_or("o"), ".").await?,
+          None => {
+            app
+              .build(opt.value_of("target").unwrap_or("o"), ".")
+              .await?
+          }
         }
-        
       }
       ("x", opt) => {
-        let m = (opt.value_of("script"), opt.value_of("command"), opt.value_of("module"));
+        let m = (
+          opt.value_of("script"),
+          opt.value_of("command"),
+          opt.value_of("module"),
+        );
         let it = opt.value_of("interpreter");
         let mut args: Vec<&str> = vec![];
         let _input = opt.value_of("input");
@@ -139,60 +153,60 @@ async fn main() -> Result<()> {
             "python" | "py" => {
               println!("running python interpreter");
               python::run(|_vm| {}, m.0, m.1, m.2);
-            },
+            }
             "bqn" => {
               println!("running BQN interpreter");
               if let Some(f) = m.0 {
-                args.insert(0,"-f");
-                args.insert(1,f);
+                args.insert(0, "-f");
+                args.insert(1, f);
                 bqn(args).await;
               } else if let Some(x) = m.1 {
-                args.insert(0,"-p");
-                args.insert(1,x);
+                args.insert(0, "-p");
+                args.insert(1, x);
                 bqn(args).await;
               } else {
-                args.insert(0,"-r");
+                args.insert(0, "-r");
                 bqn(args).await;
               }
-            },
+            }
             "k" => {
               if let Some("k9") = it {
                 println!("running shakti (k9) interpreter");
-                if m.0.is_some() { 
-                k9(args).await;
+                if m.0.is_some() {
+                  k9(args).await;
                 } else {
                   println!("running ngn/k (k6) interpreter");
                   k(args).await;
                 }
               }
-            },
+            }
             "erl" => {
               println!("running Erlang interpreter");
               erl(vec![]).await;
-            },
+            }
             "apl" => {
               if let Some("gnu") = it {
                 gnu_apl(vec![]).await;
               } else {
-              println!("running APL interpreter: Dyalog");
-              dyalog(vec!["-b"]).await;
+                println!("running APL interpreter: Dyalog");
+                dyalog(vec!["-b"]).await;
               }
-            },
+            }
             "dmc" => {
               println!("running DMC interpreter");
               dmc::run()?;
-            },
+            }
             "lua" => {
               println!("running Lua interpreter");
-              args.insert(0,"-i");
+              args.insert(0, "-i");
               if m.0.is_some() {
-                args.append(vec!["--",m.0.unwrap()].as_mut());
+                args.append(vec!["--", m.0.unwrap()].as_mut());
               }
               if m.1.is_some() {
-                args.append(vec!["-e",m.1.unwrap()].as_mut())
+                args.append(vec!["-e", m.1.unwrap()].as_mut())
               }
               if m.2.is_some() {
-                args.append(vec!["-l",m.2.unwrap()].as_mut());
+                args.append(vec!["-l", m.2.unwrap()].as_mut());
               }
               lua(args).await;
             }
@@ -204,7 +218,7 @@ async fn main() -> Result<()> {
           println!("running the default interpreter: DMC");
           dmc::run()?;
         }
-      },
+      }
       (&_, _) => {
         error!("cmd not found");
       }

@@ -13,10 +13,7 @@ use crate::{Configure, Objective};
 use rlib::{
   logger::log::error,
   obj::{
-    config::{
-      NetworkConfig, PackageConfig,
-      HgwebConfig, MercurialConfig,
-    },
+    config::{HgwebConfig, MercurialConfig, NetworkConfig, PackageConfig},
     ron::de::from_reader,
     Result,
   },

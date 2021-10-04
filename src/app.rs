@@ -1,15 +1,26 @@
 use crate::Config;
-use rlib::{db::{
-    Error as DbErr,
-    registry::Registry,
-  }, kala::{
-    Error as KErr,
+use rlib::{
+  db::{registry::Registry, Error as DbErr},
+  kala::{
     cmd::{
-      hg::{hgweb, hg}, shell::make,
-    }
-  }, logger::log::error, net::{Client, Error as NetErr, reqwest::{self, Url}, ssh}, util::Result};
+      hg::{hg, hgweb},
+      shell::make,
+    },
+    Error as KErr,
+  },
+  logger::log::error,
+  net::{
+    reqwest::{self, Url},
+    ssh, Client, Error as NetErr,
+  },
+  util::Result,
+};
 
-use std::{fs::File, path::{PathBuf, Path}, str::FromStr};
+use std::{
+  fs::File,
+  path::{Path, PathBuf},
+  str::FromStr,
+};
 pub struct App {
   pub cfg: Config,
 }
@@ -18,18 +29,20 @@ impl App {
   pub fn new(cfg: Config) -> Self {
     let shed_path: PathBuf = cfg.path.clone();
     match shed_path.join("data/log/shed").to_str() {
-      Some(p) => {rlib::logger::file("debug", p, "shed").expect("logger init failed");},
-      None => rlib::logger::flexi("info").expect("logger init failed")
+      Some(p) => {
+        rlib::logger::file("debug", p, "shed").expect("logger init failed");
+      }
+      None => rlib::logger::flexi("info").expect("logger init failed"),
     };
 
-    App {cfg}
+    App { cfg }
   }
 
   pub fn init<P: AsRef<Path>>(&self, path: P, fmt: Option<&str>) -> Result<()> {
     let p = path.as_ref();
     println!("initializing {}...", &p.display());
     match fmt {
-      Some("ron") | None => self.cfg.write(&p,None)?,
+      Some("ron") | None => self.cfg.write(&p, None)?,
       Some("json") => self.cfg.write(&p, Some("json"))?,
       Some("bin") => unimplemented!(),
       Some(_) => error!("unknown configuration type"),
@@ -37,7 +50,7 @@ impl App {
     Ok(())
   }
 
-  pub async fn build(&mut self, target: &str, pkg: &str, ) -> Result<(), KErr> {
+  pub async fn build(&mut self, target: &str, pkg: &str) -> Result<(), KErr> {
     if self.cfg.src.drain_filter(|src| src.name != *pkg).count() > 0 {
       println!("matched packages");
     };
@@ -75,21 +88,23 @@ impl App {
         let u = format!("https://hg.rwest.io/{}", &resource);
         hg(vec!["clone", &u, dst.to_str().unwrap()]).await; // this should be fallible
         println!("repo created at {}", dst.display());
-      },
+      }
       "dm" => println!("sending message to: {}", resource),
       "stash" => {
         println!("requesting resource: {}", resource);
         let u = format!("https://cdn.rwest.io/{}", &resource);
         download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
-      },
+      }
       "store" => {
         println!("requesting resource: {}", resource);
         let u = format!("https://pkg.rwest.io/{}", &resource);
         download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
-      },
+      }
       "http" => {
         println!("requesting resource over http: {}", &resource);
-        download(Url::from_str(&resource).unwrap(), &dst).await.unwrap();
+        download(Url::from_str(&resource).unwrap(), &dst)
+          .await
+          .unwrap();
       }
       "ssh" => println!("requesting resource over ssh: {}", resource),
       _ => error!("unrecognized server type {:?}", t),
@@ -101,9 +116,11 @@ impl App {
 async fn download<P: AsRef<Path>>(url: reqwest::Url, path: P) -> Result<(), NetErr> {
   let res = reqwest::get(url).await?;
   let mut dst = {
-    let fname = res.url().path_segments()
+    let fname = res
+      .url()
+      .path_segments()
       .and_then(|segments| segments.last())
-      .and_then(|name| if name.is_empty() {None} else {Some(name)})
+      .and_then(|name| if name.is_empty() { None } else { Some(name) })
       .expect("could not create path for url");
     let fname = path.as_ref().join(fname);
     println!("downloading file to {}", fname.display());
