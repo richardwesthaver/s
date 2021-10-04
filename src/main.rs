@@ -7,6 +7,8 @@
 //!
 //! This program is a development tool I use to manage such
 //! structures.
+#![feature(drain_filter)]
+
 mod app;
 use app::App;
 mod cli;
@@ -18,15 +20,19 @@ use repl::{dmc, python};
 mod ui;
 use ui::{stash, store};
 
-// rlib
+//rlib
 use rlib::{
   ctx, flate,
-  kala::cmd::{midi::list_midi_ports, sys::{describe_host,usb_devices}, repl::{bqn, k, erl, dyalog}},
+  kala::cmd::{midi::list_midi_ports, sys::{describe_host,usb_devices}, repl::{bqn, k, k9, erl, dyalog, gnu_apl, lua}, hg::hg},
   logger::log::{debug, info, error},
   obj::Objective, obj::config::Configure,
   util::Result};
-// tenex
+//tenex
 use tenex::{ipapi::get_ip,nws::weather_report};
+
+//std
+use {std::{env, path::Path}};
+
 #[ctx::main]
 async fn main() -> Result<()> {
   let cli = build_cli().version(env!("DEMON_VERSION")).get_matches();
@@ -41,7 +47,7 @@ async fn main() -> Result<()> {
     }
   };
 
-  let app = App::new(cfg);
+  let mut app = App::new(cfg);
 
   if let Some(cmd) = cli.subcommand() {
     match cmd {
@@ -72,6 +78,18 @@ async fn main() -> Result<()> {
           list_midi_ports()?;
         } else if opt.is_present("weather") {
           weather_report(41.3557, -72.0995).await?;
+        } else {
+          let input = opt.value_of("input").unwrap_or(".");
+          let cd = env::current_dir()?;
+          env::set_current_dir(&Path::new(input))?;
+          hg(vec!["summary"]).await;
+          if opt.is_present("remote") {
+            println!("#@! status :: \n");
+            hg(vec!["status","--remote"]).await; //needs error handling
+          } else {
+            hg(vec!["status"]).await;
+          }
+          env::set_current_dir(cd)?;
         }
       },
       ("init", opt) => {
@@ -85,12 +103,12 @@ async fn main() -> Result<()> {
         app.serve(opt.value_of("engine").unwrap()).await?;
       }
       ("pull", opt) => {
-        let parent = match opt.value_of("from") {
+        let f = match opt.value_of("from") {
           Some(i) => i,
           None => ".",
         };
-        println!("pulling from {}...", parent);
-        app.request("hg", parent).await?;
+        println!("pulling from {}...", f);
+        app.request("hg", f).await?;
       }
       ("push", _opt) => {
         unimplemented!();
@@ -103,36 +121,80 @@ async fn main() -> Result<()> {
         println!("running stash...");
         stash();
       }
-      ("build", _opt) => {
+      ("build", opt) => {
         println!("starting build...");
+        match opt.value_of("pkg") {
+          Some(i) => app.build(opt.value_of("target").unwrap_or("o"), i).await?,
+          None => app.build(opt.value_of("target").unwrap_or("o"), ".").await?,
+        }
+        
       }
       ("x", opt) => {
         let m = (opt.value_of("script"), opt.value_of("command"), opt.value_of("module"));
+        let it = opt.value_of("interpreter");
+        let mut args: Vec<&str> = vec![];
+        let _input = opt.value_of("input");
         if let Some(rp) = opt.value_of("repl") {
           match rp {
             "python" | "py" => {
               println!("running python interpreter");
               python::run(|_vm| {}, m.0, m.1, m.2);
-            }
+            },
             "bqn" => {
               println!("running BQN interpreter");
-              bqn().await;
-            }
+              if let Some(f) = m.0 {
+                args.insert(0,"-f");
+                args.insert(1,f);
+                bqn(args).await;
+              } else if let Some(x) = m.1 {
+                args.insert(0,"-p");
+                args.insert(1,x);
+                bqn(args).await;
+              } else {
+                args.insert(0,"-r");
+                bqn(args).await;
+              }
+            },
             "k" => {
-              println!("running ngn/k interpreter");
-              k().await;
-            }
+              if let Some("k9") = it {
+                println!("running shakti (k9) interpreter");
+                if m.0.is_some() { 
+                k9(args).await;
+                } else {
+                  println!("running ngn/k (k6) interpreter");
+                  k(args).await;
+                }
+              }
+            },
             "erl" => {
               println!("running Erlang interpreter");
-              erl().await;
-            }
+              erl(vec![]).await;
+            },
             "apl" => {
+              if let Some("gnu") = it {
+                gnu_apl(vec![]).await;
+              } else {
               println!("running APL interpreter: Dyalog");
-              dyalog().await;
-            }
+              dyalog(vec!["-b"]).await;
+              }
+            },
             "dmc" => {
               println!("running DMC interpreter");
               dmc::run()?;
+            },
+            "lua" => {
+              println!("running Lua interpreter");
+              args.insert(0,"-i");
+              if m.0.is_some() {
+                args.append(vec!["--",m.0.unwrap()].as_mut());
+              }
+              if m.1.is_some() {
+                args.append(vec!["-e",m.1.unwrap()].as_mut())
+              }
+              if m.2.is_some() {
+                args.append(vec!["-l",m.2.unwrap()].as_mut());
+              }
+              lua(args).await;
             }
             _ => {
               println!("unknown REPL type");

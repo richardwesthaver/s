@@ -12,7 +12,7 @@ publish = ["crater"]
 
 [dependencies]
 # rlib
-rlib = { version = "0.1.0", path = "../rlib", features = ["logger", "ctx", "cli", "bs", "obj", "flate", "db", "net", "hg"] }
+rlib = { version = "0.1.0", path = "../rlib", features = ["logger", "ctx", "cli", "bs", "obj", "flate", "db", "net", "hg", "ssh"] }
 tenex = { version = "0.1.0", path = "../tenex", features = ["ipapi", "nws"] }
 # contrib
 libc = "0.2"

@@ -19,14 +19,16 @@ pub fn build_cli() -> App<'static> {
           .arg(Arg::new("path").takes_value(true).default_value("."))
           .arg(Arg::new("fmt").takes_value(true).short('f').about("config format")
                .possible_values(&["json", "ron", "bin"])),
-        App::new("status").about("print basic info")
+        App::new("status").alias("s").about("print basic info")
+          .arg(Arg::new("input"))
           .arg(Arg::new("sys").long("sys").short('s').about("system info"))
           .arg(Arg::new("ip").long("ip").short('i').about("my ip"))
           .arg(Arg::new("usb").long("usb").short('u').about("usb devices"))
           .arg(Arg::new("midi").long("midi").short('m').about("midi devices"))
-          .arg(Arg::new("weather").short('w').about("weather report")),
+          .arg(Arg::new("weather").short('w').about("weather report"))
+          .arg(Arg::new("remote").short('r').about("query remote for changes")),
         App::new("pack")
-          .arg(Arg::new("input").takes_value(true))
+          .arg(Arg::new("input").takes_value(true).multiple_values(true))
           .arg(Arg::new("output").takes_value(true).default_value(".")),
         App::new("unpack")
           .arg(Arg::new("input").takes_value(true))
@@ -43,15 +45,19 @@ pub fn build_cli() -> App<'static> {
                .short('p').about("specify packages to serve"))
           .arg(Arg::new("engine").takes_value(true)
                .possible_values(&["hg","dm", "ftp"]).about("network backend")),
-        App::new("build").about("build scripts").short_flag('b'),
+        App::new("build").alias("b").about("build scripts")
+          .arg(Arg::new("target").takes_value(true).multiple_values(true))
+          .arg(Arg::new("pkg").short('p').takes_value(true).multiple_values(true).about("package to build")),
         App::new("x").about("do things with runtimes")
           .arg(Arg::new("repl").takes_value(true).default_value("dmc")
-               .possible_values(&["dmc", "py", "bqn", "k", "apl", "erl"]))
+               .possible_values(&["dmc", "py", "bqn", "k", "apl", "erl", "lua"]))
           .arg(Arg::new("command").takes_value(true).multiple_values(true)
                .short('x').about("execute a command"))
           .arg(Arg::new("module").takes_value(true).multiple_values(true)
                .short('m').about("execute a module"))
           .arg(Arg::new("script").takes_value(true)
                .alias("file").short('s').short_alias('f')
-               .about("execute a script")),
+               .about("execute a script"))
+          .arg(Arg::new("interpreter").takes_value(true)
+               .short('i').about("use the specified interpreter (dialect)")),
       ])}
