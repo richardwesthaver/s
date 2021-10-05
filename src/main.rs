@@ -59,19 +59,33 @@ async fn main() -> Result<()> {
   if let Some(cmd) = cli.subcommand() {
     match cmd {
       ("pack", opt) => {
-        let i = &opt.value_of("input").unwrap();
-        let o = &opt.value_of("output").unwrap();
-        println!("packing dir: {} => {} ", i, o);
-        flate::pack(i, o, None);
+        let (i, o) = (
+          &opt.value_of("input").unwrap(),
+          &opt.value_of("output").unwrap(),
+        );
+        if Path::new(i).is_dir() {
+          info!("packing dir: {} => {} ", i, o);
+          flate::pack(i, o, None);
+        } else if Path::new(i).is_file() {
+          info!("compressing file: {} => {} ", i, o);
+          flate::compress(i, o)?;
+        }
       }
       ("unpack", opt) => {
-        let i = &opt.value_of("input").unwrap();
-        let o = &opt.value_of("output").unwrap();
-        println!("unpacking pkg: {} => {} ", i, o);
-        if opt.is_present("replace") {
-          flate::unpack_replace(i, o);
-        } else {
-          flate::unpack(i, o);
+        let (i, o) = (
+          &opt.value_of("input").unwrap(),
+          &opt.value_of("output").unwrap(),
+        );
+        if Path::new(i).is_dir() {
+          println!("unpacking pkg: {} => {} ", i, o);
+          if opt.is_present("replace") {
+            flate::unpack_replace(i, o);
+          } else {
+            flate::unpack(i, o);
+          }
+        } else if Path::new(i).is_file() {
+          info!("decompressing file: {} => {} ", i, o);
+          flate::decompress(i)?;
         }
       }
       ("status", opt) => {
