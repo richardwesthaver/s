@@ -61,6 +61,7 @@ impl Config {
       Some(i) => match i {
         "json" => self.to_json_writer(file)?,
         "ron" => self.to_ron_writer(file)?,
+        "bin" => self.encode_into(file)?,
         i => {
           error!("extension '{}' not understood", i);
           std::process::exit(1);

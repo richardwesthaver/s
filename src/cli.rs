@@ -21,6 +21,7 @@ pub fn build_cli() -> App<'static> {
       App::new("init")
         .about("initialize the shed")
         .arg(Arg::new("path").takes_value(true).default_value("."))
+        .arg(Arg::new("db").short('d').long("db"))
         .arg(
           Arg::new("fmt")
             .takes_value(true)
@@ -28,6 +29,18 @@ pub fn build_cli() -> App<'static> {
             .about("config format")
             .possible_values(&["json", "ron", "bin"]),
         ),
+      App::new("edit")
+        .alias("e")
+        .about("edit all the things")
+        .arg(Arg::new("input").takes_value(true).default_value(".")),
+      App::new("krypt")
+        .alias("k")
+        .about("blackbox")
+        .arg(Arg::new("input").takes_value(true).default_value(".")),
+      App::new("clean")
+        .alias("c")
+        .about("clean stuff up")
+        .arg(Arg::new("input").takes_value(true).default_value(".")),
       App::new("status")
         .alias("s")
         .about("print basic info")
@@ -58,8 +71,8 @@ pub fn build_cli() -> App<'static> {
             .short('r')
             .about("consume input package"),
         ),
-      App::new("pull").about("fetch remote changes").arg(
-        Arg::new("from")
+      App::new("pull").about("fetch resources").arg(
+        Arg::new("input")
           .takes_value(true)
           .about("parent to pull from"),
       ),

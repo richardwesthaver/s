@@ -100,7 +100,11 @@ async fn main() -> Result<()> {
         }
       }
       ("init", opt) => {
-        app.init(opt.value_of("path").unwrap(), opt.value_of("fmt"))?;
+        if opt.is_present("db") {
+          app.db_init()?;
+        } else {
+          app.init(opt.value_of("path").unwrap(), opt.value_of("fmt"))?;
+        }
       }
       ("serve", opt) => {
         println!("starting server...");
@@ -110,12 +114,15 @@ async fn main() -> Result<()> {
         app.serve(opt.value_of("engine").unwrap()).await?;
       }
       ("pull", opt) => {
-        let f = match opt.value_of("from") {
-          Some(i) => i,
-          None => ".",
+        let (ty, r) = match opt.value_of("input") {
+          Some(i) => {
+            let mut s = i.split(":");
+            (s.next().unwrap(), s.next().unwrap())
+          }
+          None => ("hg", "."),
         };
-        println!("pulling from {}...", f);
-        app.request("hg", f).await?;
+        println!("pulling {} from {}...", r, ty);
+        app.request(ty, r).await?;
       }
       ("push", _opt) => {
         unimplemented!();
@@ -159,37 +166,37 @@ async fn main() -> Result<()> {
               if let Some(f) = m.0 {
                 args.insert(0, "-f");
                 args.insert(1, f);
-                bqn(args).await;
+                bqn(args).await?;
               } else if let Some(x) = m.1 {
                 args.insert(0, "-p");
                 args.insert(1, x);
-                bqn(args).await;
+                bqn(args).await?;
               } else {
                 args.insert(0, "-r");
-                bqn(args).await;
+                bqn(args).await?;
               }
             }
             "k" => {
               if let Some("k9") = it {
                 println!("running shakti (k9) interpreter");
                 if m.0.is_some() {
-                  k9(args).await;
+                  k9(args).await?;
                 } else {
                   println!("running ngn/k (k6) interpreter");
-                  k(args).await;
+                  k(args).await?;
                 }
               }
             }
             "erl" => {
               println!("running Erlang interpreter");
-              erl(vec![]).await;
+              erl(vec![]).await?;
             }
             "apl" => {
               if let Some("gnu") = it {
-                gnu_apl(vec![]).await;
+                gnu_apl(vec![]).await?;
               } else {
                 println!("running APL interpreter: Dyalog");
-                dyalog(vec!["-b"]).await;
+                dyalog(vec!["-b"]).await?;
               }
             }
             "dmc" => {
@@ -208,7 +215,7 @@ async fn main() -> Result<()> {
               if m.2.is_some() {
                 args.append(vec!["-l", m.2.unwrap()].as_mut());
               }
-              lua(args).await;
+              lua(args).await?;
             }
             _ => {
               println!("unknown REPL type");

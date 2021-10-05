@@ -11,8 +11,9 @@ use rlib::{
   logger::log::error,
   net::{
     reqwest::{self, Url},
-    ssh, Client, Error as NetErr,
+    Client, Error as NetErr,
   },
+  obj::config::Oauth2Config,
   util::Result,
 };
 
@@ -44,7 +45,7 @@ impl App {
     match fmt {
       Some("ron") | None => self.cfg.write(&p, None)?,
       Some("json") => self.cfg.write(&p, Some("json"))?,
-      Some("bin") => unimplemented!(),
+      Some("bin") => self.cfg.write(&p, Some("bin"))?,
       Some(_) => error!("unknown configuration type"),
     }
     Ok(())
@@ -58,9 +59,11 @@ impl App {
     Ok(())
   }
 
-  pub fn db_init(&self) -> Result<Registry, DbErr> {
-    let shed_path: PathBuf = self.cfg.path.clone();
-    Registry::new(shed_path.join("data/db"))
+  pub fn db_init(&self) -> Result<(), DbErr> {
+    let db_path: PathBuf = self.cfg.path.clone().join("data/db");
+    std::fs::remove_dir_all(&db_path)?;
+    Registry::new(&db_path)?;
+    Ok(())
   }
 
   pub async fn serve(&self, engine: &str) -> Result<()> {
@@ -84,24 +87,33 @@ impl App {
     let dst = self.cfg.path.join("stash/tmp/").join(&resource);
     match t {
       "hg" => {
-        println!("requesting mercurial repo: {}", resource);
         let u = format!("https://hg.rwest.io/{}", &resource);
         hg(vec!["clone", &u, dst.to_str().unwrap()]).await; // this should be fallible
         println!("repo created at {}", dst.display());
       }
       "dm" => println!("sending message to: {}", resource),
+      "drive" => {
+        let hd = tenex::google::drive_handle(Oauth2Config::default())
+          .await
+          .unwrap();
+        hd.files()
+          .list()
+          .supports_team_drives(false)
+          .supports_all_drives(true)
+          .corpora("sed")
+          .doit()
+          .await
+          .expect("google_drive failed!");
+      }
       "stash" => {
-        println!("requesting resource: {}", resource);
         let u = format!("https://cdn.rwest.io/{}", &resource);
         download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
       }
       "store" => {
-        println!("requesting resource: {}", resource);
         let u = format!("https://pkg.rwest.io/{}", &resource);
         download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
       }
       "http" => {
-        println!("requesting resource over http: {}", &resource);
         download(Url::from_str(&resource).unwrap(), &dst)
           .await
           .unwrap();
