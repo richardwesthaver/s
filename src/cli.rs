@@ -2,7 +2,7 @@ use rlib::util::cli::{App, AppSettings, Arg};
 pub fn build_cli() -> App<'static> {
   App::new("shed")
     .author("ellis <ellis@rwest.io>")
-    .about("shed ← tool≍⌜⍋box")
+    .about("shed multi-development tool")
     .setting(AppSettings::ColorAuto)
     .setting(AppSettings::ColoredHelp)
     .setting(AppSettings::DisableVersionForSubcommands)

@@ -11,7 +11,7 @@ use std::{
 use crate::{Configure, Objective};
 
 use rlib::{
-  logger::log::error,
+  logger::log::{error, debug},
   obj::{
     config::{HgwebConfig, MercurialConfig, NetworkConfig, PackageConfig},
     ron::de::from_reader,
@@ -76,7 +76,10 @@ impl Config {
   pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
     let f = fs::File::open(path)?;
     let config: Config = match from_reader(f) {
-      Ok(x) => x,
+      Ok(x) => {
+        debug!("loading config: {:?}", x);
+        x
+      },
       Err(e) => {
         error!("Failed to load config: {}", e);
         std::process::exit(1);

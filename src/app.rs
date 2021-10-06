@@ -8,7 +8,7 @@ use rlib::{
     },
     Error as KErr,
   },
-  logger::log::error,
+  logger::log::{error, debug},
   net::{
     reqwest::{self, Url},
     Client, Error as NetErr,
@@ -29,13 +29,13 @@ pub struct App {
 impl App {
   pub fn new(cfg: Config) -> Self {
     let shed_path: PathBuf = cfg.path.clone();
-    match shed_path.join("data/log/shed").to_str() {
+    debug!("App Config: {:?}", cfg);
+    match shed_path.join("data/log").to_str() {
       Some(p) => {
-        rlib::logger::file("debug", p, "shed").expect("logger init failed");
+        rlib::logger::file("rlib=debug,trace", p, "shed").expect("logger init failed");
       }
       None => rlib::logger::flexi("info").expect("logger init failed"),
     };
-
     App { cfg }
   }
 
