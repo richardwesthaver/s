@@ -62,12 +62,17 @@ pub fn build_cli() -> App<'static> {
         ),
       App::new("pack")
         .about("create packages from file or directory")
-        .arg(Arg::new("input").takes_value(true).multiple_values(true))
+        .arg(Arg::new("input").takes_value(true))
         .arg(Arg::new("output").takes_value(true).default_value(".")),
       App::new("unpack")
         .about("unpack .zst or .tz files")
         .arg(Arg::new("input").takes_value(true))
-        .arg(Arg::new("output").takes_value(true).default_value("."))
+        .arg(
+          Arg::new("output")
+            .takes_value(true)
+            .default_value(".")
+            .required(false),
+        )
         .arg(
           Arg::new("replace")
             .short('r')

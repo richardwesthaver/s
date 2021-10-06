@@ -60,13 +60,23 @@ async fn main() -> Result<()> {
     match cmd {
       ("pack", opt) => {
         let (i, o) = (
-          &opt.value_of("input").unwrap(),
-          &opt.value_of("output").unwrap(),
+          opt.value_of("input").unwrap(),
+          opt.value_of("output").unwrap(),
         );
         if Path::new(i).is_dir() {
+          let o = if o.eq(".") {
+            format!("{}.{}", i, "tz")
+          } else {
+            o.to_owned()
+          };
           info!("packing dir: {} => {} ", i, o);
           flate::pack(i, o, None);
         } else if Path::new(i).is_file() {
+          let o = if o.eq(".") {
+            format!("{}.{}", i, "z")
+          } else {
+            o.to_owned()
+          };
           info!("compressing file: {} => {} ", i, o);
           flate::compress(i, o)?;
         }
@@ -127,7 +137,7 @@ async fn main() -> Result<()> {
         }
         app.serve(opt.value_of("engine").unwrap()).await?;
       }
-      ("pull", opt) => {
+      ("download", opt) => {
         let (ty, r) = match opt.value_of("input") {
           Some(i) => {
             let mut s = i.split(":");
@@ -136,10 +146,13 @@ async fn main() -> Result<()> {
           None => ("hg", "."),
         };
         println!("pulling {} from {}...", r, ty);
-        app.request(ty, r).await?;
+        app.dl(ty, r).await?;
       }
       ("push", _opt) => {
-        unimplemented!();
+        hg(vec!["push"]).await;
+      }
+      ("pull", _opt) => {
+        hg(vec!["pull"]).await;
       }
       ("store", _opt) => {
         println!("running store...");

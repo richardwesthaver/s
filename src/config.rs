@@ -27,14 +27,14 @@ pub struct Config {
   pub owner: Option<String>,
   pub src: Vec<PackageConfig>,
   pub network: NetworkConfig,
-  pub hgrc: MercurialConfig,
+  pub hg: MercurialConfig,
 }
 
 impl Default for Config {
   fn default() -> Self {
     let mut ui = HashMap::new();
     ui.insert("username".to_string(), "ellis <ellis@rwest.io>".to_string());
-    let hgrc = MercurialConfig {
+    let hg = MercurialConfig {
       ui,
       extensions: None,
       paths: None,
@@ -47,7 +47,7 @@ impl Default for Config {
       owner: Some(env!("USER").to_string()),
       src: vec![],
       network: NetworkConfig::default(),
-      hgrc,
+      hg,
     }
   }
 }

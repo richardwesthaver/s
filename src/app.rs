@@ -13,7 +13,7 @@ use rlib::{
     reqwest::{self, Url},
     Client, Error as NetErr,
   },
-  obj::config::Oauth2Config,
+  obj::config::{Oauth2Config, SshConfig},
   util::Result,
 };
 
@@ -68,7 +68,7 @@ impl App {
 
   pub async fn serve(&self, engine: &str) -> Result<()> {
     match engine {
-      "hg" => hgweb(&self.cfg.hgrc)
+      "hg" => hgweb(&self.cfg.hg)
         .await
         .expect("encountered error in hg_serve process"),
       "dm" => {
@@ -81,15 +81,19 @@ impl App {
     Ok(())
   }
 
-  pub async fn request(&self, t: &str, resource: &str) -> Result<(), NetErr> {
+  pub async fn dl(&self, t: &str, resource: &str) -> Result<(), NetErr> {
     let cfg = self.cfg.network.clone();
     let _client = Client { cfg };
-    let dst = self.cfg.path.join("stash/tmp/").join(&resource);
+    let dst = self.cfg.path.join("stash/tmp/");
     match t {
       "hg" => {
         let u = format!("https://hg.rwest.io/{}", &resource);
-        hg(vec!["clone", &u, dst.to_str().unwrap()]).await; // this should be fallible
-        println!("repo created at {}", dst.display());
+        if resource.eq(".") {
+          hg(vec!["pull"]).await;
+        } else {
+          hg(vec!["clone", &u, dst.to_str().unwrap()]).await; // this should be fallible
+          println!("repo created at {}", dst.display());
+        }
       }
       "dm" => println!("sending message to: {}", resource),
       "drive" => {
@@ -100,25 +104,31 @@ impl App {
           .list()
           .supports_team_drives(false)
           .supports_all_drives(true)
-          .corpora("sed")
+          //          .corpora("sed")
           .doit()
           .await
           .expect("google_drive failed!");
       }
-      "stash" => {
+      "cdn" => {
         let u = format!("https://cdn.rwest.io/{}", &resource);
         download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
       }
-      "store" => {
+      "pkg" => {
         let u = format!("https://pkg.rwest.io/{}", &resource);
         download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
       }
       "http" => {
-        download(Url::from_str(&resource).unwrap(), &dst)
-          .await
-          .unwrap();
+        let u = format!("http:{}", &resource);
+        download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
       }
-      "ssh" => println!("requesting resource over ssh: {}", resource),
+      "https" => {
+        let u = format!("https:{}", &resource);
+        download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
+      }
+      "ssh" => {
+        let cfg = SshConfig::default();
+        println!("requesting resource over ssh: {}", resource);
+      }
       _ => error!("unrecognized server type {:?}", t),
     }
     Ok(())
