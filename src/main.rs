@@ -17,8 +17,6 @@ mod config;
 use config::Config;
 mod repl;
 use repl::{dmc, python};
-mod ui;
-use ui::{stash, store};
 
 //rlib
 use rlib::{
@@ -26,6 +24,7 @@ use rlib::{
   kala::cmd::{
     hg::hg,
     midi::list_midi_ports,
+    shell::emacs,
     repl::{bqn, dyalog, erl, gnu_apl, k, k9, lua},
     sys::{describe_host, usb_devices},
   },
@@ -101,34 +100,50 @@ async fn main() -> Result<()> {
       ("status", opt) => {
         if opt.is_present("sys") {
           describe_host();
-        } else if opt.is_present("usb") {
+        }
+        if opt.is_present("usb") {
           usb_devices(None)?;
-        } else if opt.is_present("ip") {
+        }
+        if opt.is_present("ip") {
           get_ip().await?;
-        } else if opt.is_present("midi") {
+        }
+        if opt.is_present("midi") {
           list_midi_ports()?;
-        } else if opt.is_present("weather") {
+        }
+        if opt.is_present("weather") {
           weather_report(41.3557, -72.0995).await?;
-        } else {
-          let input = opt.value_of("input").unwrap_or(".");
-          let cd = env::current_dir()?;
-          env::set_current_dir(&Path::new(input))?;
-          hg(vec!["summary"]).await;
-          if opt.is_present("remote") {
-            println!("#@! status :: \n");
-            hg(vec!["status", "--remote"]).await; //needs error handling
-          } else {
-            hg(vec!["status"]).await;
+        }
+        if opt.is_present("vc") {
+          match opt.value_of("input") {
+            Some(i) => {
+              let cd = env::current_dir()?;
+              env::set_current_dir(&Path::new(i))?;
+              if opt.is_present("remote") {
+                hg(vec!["summary", "--remote"]).await;
+                hg(vec!["status"]).await; //needs error handling
+              } else {
+                hg(vec!["summary"]).await;
+                hg(vec!["status"]).await;
+              }
+              env::set_current_dir(cd)?;
+            }
+            None => {
+              if opt.is_present("remote") {
+                hg(vec!["summary", "--remote"]).await;
+                hg(vec!["status"]).await; //needs error handling
+              } else {
+                hg(vec!["summary"]).await;
+                hg(vec!["status"]).await;
+              }
+            }
           }
-          env::set_current_dir(cd)?;
         }
       }
       ("init", opt) => {
         if opt.is_present("db") {
           app.db_init()?;
-        } else {
-          app.init(opt.value_of("path").unwrap(), opt.value_of("fmt"))?;
         }
+        app.init(opt.value_of("path").unwrap(), opt.value_of("fmt"))?;
       }
       ("serve", opt) => {
         println!("starting server...");
@@ -156,11 +171,9 @@ async fn main() -> Result<()> {
       }
       ("store", _opt) => {
         println!("running store...");
-        store();
       }
       ("stash", _opt) => {
         println!("running stash...");
-        stash();
       }
       ("build", opt) => {
         println!("starting build...");
@@ -252,6 +265,19 @@ async fn main() -> Result<()> {
           println!("running the default interpreter: DMC");
           dmc::run()?;
         }
+      }
+      ("edit", opt) => {
+        match opt.value_of("input") {
+          Some(i) => {
+            emacs(vec![i]).await?;
+          },
+          None => {
+            emacs(vec!["."]).await?;
+          }
+        }
+      }
+      ("clean", opt) => {
+
       }
       (&_, _) => {
         error!("cmd not found");

@@ -55,10 +55,12 @@ pub fn build_cli() -> App<'static> {
             .about("midi devices"),
         )
         .arg(Arg::new("weather").short('w').about("weather report"))
+        .arg(Arg::new("vc").short('v').about("show repo status"))
         .arg(
           Arg::new("remote")
             .short('r')
-            .about("query remote for changes"),
+            .about("query remote for changes")
+            .requires("vc"),
         ),
       App::new("pack")
         .about("create packages from file or directory")

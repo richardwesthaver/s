@@ -2,14 +2,13 @@
 name = "shed"
 version = "0.1.0"
 authors = ["ellis"]
-edition = "2018"
+edition = "2021"
 documentation = "https://docs.rwest.io/shed"
 repository = "https://hg.rwest.io/shed"
 readme = "META"
 license-file = "COPYING"
 description = "a hacker tool"
 publish = ["crater"]
-
 [dependencies]
 # rlib
 rlib = { version = "0.1.0", path = "../rlib", features = ["logger", "ctx", "cli", "bs", "obj", "flate", "db", "net", "hg", "ssh"] }
@@ -19,7 +18,6 @@ libc = "0.2"
 serde = { version = "1.0.128", features = ["derive"] }
 clap = { version = "3.0.0-beta.4", features = ["suggestions", "color", "derive", "env", "cargo", "unicode_help", "wrap_help"] }
 crossterm = { version = "0.17", features = ["event-stream"] }
-cursive = { version = "0.16" }
 rustpython-vm = { version = "0.1.1", git = "https://github.com/RustPython/RustPython", features = ["ssl", "zlib"], rev = "fb4581bd453b45a23df71f6ec81e9c01e3e9b821"}
 rustpython-parser = { version = "0.1.1", git = "https://github.com/RustPython/RustPython", rev = "fb4581bd453b45a23df71f6ec81e9c01e3e9b821"}
 rustpython-compiler = { version = "0.1.1", git = "https://github.com/RustPython/RustPython", rev = "fb4581bd453b45a23df71f6ec81e9c01e3e9b821"}
