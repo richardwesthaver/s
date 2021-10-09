@@ -11,51 +11,54 @@ use std::{
 use crate::{Configure, Objective};
 
 use rlib::{
-  logger::log::{error, debug},
+  logger::log::{error, info},
+  kala::cmd::shell::emacsclient,
   obj::{
-    config::{HgwebConfig, MercurialConfig, NetworkConfig, PackageConfig},
+    config::{HgwebConfig, MercurialConfig, NetworkConfig, PackageConfig, Oauth2Config, SshConfig, UserConfig, ProjectConfig},
     ron::de::from_reader,
     Result,
+    impl_config,
   },
 };
 
 use serde::{Deserialize, Serialize};
 
+/// Shed configuration type
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
   pub path: PathBuf, // the shed path on disk
-  pub owner: Option<String>,
   pub src: Vec<PackageConfig>,
-  pub network: NetworkConfig,
+  pub net: NetworkConfig,
   pub hg: MercurialConfig,
+  pub lab: Vec<ProjectConfig>,
+  pub usr: UserConfig,
 }
 
-impl Default for Config {
-  fn default() -> Self {
-    let mut ui = HashMap::new();
-    ui.insert("username".to_string(), "ellis <ellis@rwest.io>".to_string());
+impl Config {
+  pub fn new() -> Self {
     let hg = MercurialConfig {
-      ui,
+      ui: HashMap::new(),
       extensions: None,
       paths: None,
       web: HgwebConfig::default(),
     };
+    let lab = vec![];
+    let usr = UserConfig::default();
     Config {
       path: PathBuf::from(
-        option_env!("SHED").unwrap_or(std::env::current_dir().unwrap().to_str().unwrap()),
+        option_env!("SHED").unwrap_or("~/shed")
       ),
-      owner: Some(env!("USER").to_string()),
       src: vec![],
-      network: NetworkConfig::default(),
+      net: NetworkConfig::default(),
       hg,
+      lab,
+      usr
     }
   }
-}
 
-impl Config {
   pub fn write<P: AsRef<Path>>(&self, path: P, ext: Option<&str>) -> Result<()> {
     let path = path.as_ref();
-    let f_path = &path.join(".shed");
+    let f_path = &path.join("shed.cfg");
     let file = fs::File::create(f_path)?;
     match ext {
       Some(i) => match i {
@@ -77,7 +80,7 @@ impl Config {
     let f = fs::File::open(path)?;
     let config: Config = match from_reader(f) {
       Ok(x) => {
-        debug!("loading config: {:?}", x);
+        info!("loading config: {:?}", x);
         x
       },
       Err(e) => {
@@ -89,5 +92,5 @@ impl Config {
   }
 }
 
-impl Configure for Config {}
-impl Objective for Config {}
+impl_config!(Config);
+

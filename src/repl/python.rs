@@ -1,4 +1,5 @@
 //! RustPython functions and interpreter
+use clap::ArgMatches;
 use rlib::kala::cmd::input::rustyline;
 use rlib::logger::log::{debug, error, warn};
 use rustpython_vm::builtins::{PyDictRef, PyStrRef};
@@ -15,11 +16,11 @@ use std::str::FromStr;
 /// The main cli of the `rustpython` interpreter. This function will
 /// exit with `process::exit()` based on the return code of the python
 /// code ran through the cli.
-pub fn run<F>(init: F, file: Option<&str>, cmd: Option<&str>, module: Option<&str>) -> !
+pub fn run<F>(init: F, opts: &ArgMatches) -> !
 where
   F: FnOnce(&mut VirtualMachine),
 {
-  let settings = create_settings(&file, &cmd, &module);
+  let settings = create_settings(&opts);
   let init_param = InitParameter::External;
 
   let interp = Interpreter::new_with_init(settings, |vm| {
@@ -28,7 +29,7 @@ where
   });
 
   let exitcode = interp.enter(move |vm| {
-    let res = run_rustpython(vm, &file, &cmd, &module);
+    let res = run_rustpython(vm, &opts);
     flush_std(vm);
     // See if any exception leaked out:
     let exitcode = match res {
@@ -89,9 +90,9 @@ fn flush_std(vm: &VirtualMachine) {
 /// Create settings by examining command line arguments and environment
 /// variables.
 /// refer to https://github.com/RustPython/RustPython/blob/ec5b6b4e8783b211344bce4b5cb0ae09a1572ec3/vm/src/vm.rs#L137 for PySettings fields
-fn create_settings(file: &Option<&str>, cmd: &Option<&str>, module: &Option<&str>) -> PySettings {
+fn create_settings(opts: &ArgMatches) -> PySettings {
   let mut settings = PySettings {
-    interactive: !cmd.is_some() && !file.is_some() && !module.is_some(),
+    interactive: !opts.is_present("command") && !opts.is_present("script") && !opts.is_present("module"),
     ..Default::default()
   };
 
@@ -118,18 +119,16 @@ fn create_settings(file: &Option<&str>, cmd: &Option<&str>, module: &Option<&str
     settings.verbose = value;
   }
 
-  let argv = if let Some(script) = file {
-    script
-      .split_whitespace()
-      .map(ToOwned::to_owned)
-      .collect::<Vec<String>>()
-  } else if let Some(command) = cmd {
+  let argv = if let Some(script) =  opts.values_of("script") {
+    script.map(ToOwned::to_owned).collect()
+  } else if let Some(cmd) = opts.values_of("command") {
     std::iter::once("-c".to_owned())
-      .chain(command.split_whitespace().map(ToOwned::to_owned))
-      .collect::<Vec<String>>()
-  } else if let Some(module) = module {
+      .chain(cmd.skip(1).map(ToOwned::to_owned))
+      .collect()
+  }
+  else if let Some(module) = opts.values_of("module") {
     std::iter::once("PLACEHOLDER".to_owned())
-      .chain(module.split_whitespace().skip(1).map(ToOwned::to_owned))
+      .chain(module.skip(1).map(ToOwned::to_owned))
       .collect::<Vec<String>>()
   } else {
     vec!["".to_string()]
@@ -180,9 +179,7 @@ fn get_paths(env_variable_name: &str) -> impl Iterator<Item = String> + '_ {
 
 fn run_rustpython(
   vm: &VirtualMachine,
-  file: &Option<&str>,
-  cmd: &Option<&str>,
-  module: &Option<&str>,
+  opts: &ArgMatches,
 ) -> PyResult<()> {
   let scope = vm.new_scope_with_builtins();
   let main_module = vm.new_module("__main__", scope.globals.clone(), None);
@@ -210,9 +207,9 @@ fn run_rustpython(
     );
   }
 
-  // Figure out if a -c option was given:
-  if let Some(command) = cmd {
-    match command.as_ref() {
+  // Figure out if a -s option was given:
+  if let Some(command) = opts.value_of("command") {
+    match command {
       "install_pip" => {
         let get_getpip = rustpython_vm::py_compile!(
           source = r#"\
@@ -230,13 +227,13 @@ __import__("io").TextIOWrapper(
         eprintln!("running get-pip.py...");
         _run_string(vm, scope, getpip_code.as_str(), "get-pip.py".to_owned())?;
       }
-      _ => {
-        run_command(vm, scope, command.to_string())?;
+      i => {
+        run_command(vm, scope, i.to_string())?;
       }
     }
-  } else if let Some(filename) = file {
+  } else if let Some(filename) = opts.value_of("script") {
     run_script(vm, scope.clone(), filename)?;
-  } else if let Some(module) = module {
+  } else if let Some(module) = opts.value_of("module") {
     run_module(vm, module)?;
   } else {
     println!("Welcome to the magnificent RustPython interpreter \u{1f631} \u{1f596}");
@@ -587,34 +584,30 @@ impl<'vm> ShellHelper<'vm> {
   }
 }
 
-cfg_if::cfg_if! {
-    if #[cfg(not(target_os = "wasi"))] {
-        use rustyline::{
-            completion::Completer, highlight::Highlighter, hint::Hinter, validate::Validator, Context,
-            Helper,
-        };
-        impl Completer for ShellHelper<'_> {
-            type Candidate = String;
-
-            fn complete(
-                &self,
-                line: &str,
-                pos: usize,
-                _ctx: &Context,
-            ) -> rustyline::Result<(usize, Vec<String>)> {
-                Ok(self
-                    .complete_opt(&line[0..pos])
-                    // as far as I can tell, there's no better way to do both completion
-                    // and indentation (or even just indentation)
-                    .unwrap_or_else(|| (pos, vec!["\t".to_owned()])))
-            }
-        }
-
-        impl Hinter for ShellHelper<'_> {
-            type Hint = String;
-        }
-        impl Highlighter for ShellHelper<'_> {}
-        impl Validator for ShellHelper<'_> {}
-        impl Helper for ShellHelper<'_> {}
-    }
+use rustyline::{
+  completion::Completer, highlight::Highlighter, hint::Hinter, validate::Validator, Context,
+  Helper,
+};
+impl Completer for ShellHelper<'_> {
+  type Candidate = String;
+  
+  fn complete(
+    &self,
+    line: &str,
+    pos: usize,
+    _ctx: &Context,
+  ) -> rustyline::Result<(usize, Vec<String>)> {
+    Ok(self
+       .complete_opt(&line[0..pos])
+       // as far as I can tell, there's no better way to do both completion
+       // and indentation (or even just indentation)
+       .unwrap_or_else(|| (pos, vec!["\t".to_owned()])))
+  }
 }
+
+impl Hinter for ShellHelper<'_> {
+  type Hint = String;
+}
+impl Highlighter for ShellHelper<'_> {}
+impl Validator for ShellHelper<'_> {}
+impl Helper for ShellHelper<'_> {}

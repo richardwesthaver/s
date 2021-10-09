@@ -25,7 +25,6 @@ pylib = { version = "0.1.0", git = "https://github.com/RustPython/RustPython", p
 rustyline-derive = { version = "0.5" }
 rustyline = { version = "9.0.0" }
 num-traits = "0.2"
-cfg-if = "1.0"
 [build-dependencies]
 rlib = { version = "0.1.0", path = "../rlib", features = ["bs", "cli", "flate2"] }
 #dirs = { package = "dirs-next", version = "2.0.0" }

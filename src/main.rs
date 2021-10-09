@@ -24,7 +24,7 @@ use rlib::{
   kala::cmd::{
     hg::hg,
     midi::list_midi_ports,
-    shell::emacs,
+    shell::emacsclient,
     repl::{bqn, dyalog, erl, gnu_apl, k, k9, lua},
     sys::{describe_host, usb_devices},
   },
@@ -48,8 +48,13 @@ async fn main() -> Result<()> {
       Config::load(cfg)?
     }
     None => {
-      info!("loading defaults...");
-      Config::default()
+      let env = Path::new(env!("CFG")).join("shed.cfg");
+      if env.is_file() {
+        Config::load(env)?
+      } else {
+        info!("loading defaults...");
+        Config::new()
+      }
     }
   };
 
@@ -143,7 +148,7 @@ async fn main() -> Result<()> {
         if opt.is_present("db") {
           app.db_init()?;
         }
-        app.init(opt.value_of("path").unwrap(), opt.value_of("fmt"))?;
+        app.init_cfg(opt.value_of("fmt"))?;
       }
       ("serve", opt) => {
         println!("starting server...");
@@ -153,15 +158,14 @@ async fn main() -> Result<()> {
         app.serve(opt.value_of("engine").unwrap()).await?;
       }
       ("download", opt) => {
-        let (ty, r) = match opt.value_of("input") {
+        match opt.value_of("input") {
           Some(i) => {
-            let mut s = i.split(":");
-            (s.next().unwrap(), s.next().unwrap())
-          }
-          None => ("hg", "."),
+            let s: Vec<&str> = i.split(":").collect();
+            info!("downloading {} from {}...", s[0], s[1]);
+            app.dl(s[0], s[1]).await?;
+          },
+          None => {error!("an object URI is required!")}
         };
-        println!("pulling {} from {}...", r, ty);
-        app.dl(ty, r).await?;
       }
       ("push", _opt) => {
         hg(vec!["push"]).await;
@@ -187,11 +191,6 @@ async fn main() -> Result<()> {
         }
       }
       ("x", opt) => {
-        let m = (
-          opt.value_of("script"),
-          opt.value_of("command"),
-          opt.value_of("module"),
-        );
         let it = opt.value_of("interpreter");
         let mut args: Vec<&str> = vec![];
         let _input = opt.value_of("input");
@@ -199,32 +198,39 @@ async fn main() -> Result<()> {
           match rp {
             "python" | "py" => {
               println!("running python interpreter");
-              python::run(|_vm| {}, m.0, m.1, m.2);
+              python::run(|_vm| {}, opt);
             }
             "bqn" => {
               println!("running BQN interpreter");
-              if let Some(f) = m.0 {
+              if let Some(f) = opt.values_of("script") {
                 args.insert(0, "-f");
-                args.insert(1, f);
+                for (x,i) in f.enumerate() {
+                args.insert(x, i);
+                }
                 bqn(args).await?;
-              } else if let Some(x) = m.1 {
+              } else if let Some(f) = opt.values_of("command") {
                 args.insert(0, "-p");
-                args.insert(1, x);
+                for (x,i) in f.enumerate() {
+                args.insert(x, i);
+                }
                 bqn(args).await?;
               } else {
                 args.insert(0, "-r");
                 bqn(args).await?;
               }
             }
+            "elisp" | "el" => {
+              println!("running IELM");
+              emacsclient(vec!["-t","-e","(ielm)"]).await?;
+            }
             "k" => {
-              if let Some("k9") = it {
+              let args = opt.value_of("command").unwrap();
+              if let Some("k9") = opt.value_of("interpreter") {
                 println!("running shakti (k9) interpreter");
-                if m.0.is_some() {
-                  k9(args).await?;
-                } else {
-                  println!("running ngn/k (k6) interpreter");
-                  k(args).await?;
-                }
+                k9(vec![args]).await?;
+              } else {
+                println!("running ngn/k (k6) interpreter");
+                k(vec![args]).await?;
               }
             }
             "erl" => {
@@ -246,14 +252,20 @@ async fn main() -> Result<()> {
             "lua" => {
               println!("running Lua interpreter");
               args.insert(0, "-i");
-              if m.0.is_some() {
-                args.append(vec!["--", m.0.unwrap()].as_mut());
+              if let Some(i) = opt.values_of("script") {
+                for i in i.into_iter() {
+                  args.append(vec!["--", i].as_mut());
+                }
               }
-              if m.1.is_some() {
-                args.append(vec!["-e", m.1.unwrap()].as_mut())
+              if let Some(i) = opt.values_of("command") {
+                for i in i.into_iter() {
+                  args.append(vec!["-e", i].as_mut());
+                }
               }
-              if m.2.is_some() {
-                args.append(vec!["-l", m.2.unwrap()].as_mut());
+              if let Some(i) = opt.values_of("module") {
+                for i in i.into_iter() {
+                  args.append(vec!["-l", i].as_mut());
+                }
               }
               lua(args).await?;
             }
@@ -269,10 +281,10 @@ async fn main() -> Result<()> {
       ("edit", opt) => {
         match opt.value_of("input") {
           Some(i) => {
-            emacs(vec![i]).await?;
+            app.edit(i).await?;
           },
           None => {
-            emacs(vec!["."]).await?;
+            app.edit(".").await?;
           }
         }
       }
@@ -284,7 +296,7 @@ async fn main() -> Result<()> {
       }
     }
   } else {
-    debug!("no command supplied");
+    error!("no command supplied");
   }
   Ok(())
 }

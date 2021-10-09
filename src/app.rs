@@ -1,27 +1,21 @@
 use crate::Config;
-use rlib::{
-  db::{registry::Registry, Error as DbErr},
-  kala::{
+use rlib::{db::{registry::Registry, Error as DbErr}, kala::{
     cmd::{
       hg::{hg, hgweb},
-      shell::make,
+      shell::{make, emacsclient},
     },
     Error as KErr,
-  },
-  logger::log::{error, debug},
-  net::{
+  }, logger::log::{error,debug}, net::{
     reqwest::{self, Url},
     Client, Error as NetErr,
-  },
-  obj::config::{Oauth2Config, SshConfig},
-  util::Result,
-};
+  }, obj::{Error, config::Oauth2Config}, util::Result};
 
 use std::{
   fs::File,
   path::{Path, PathBuf},
   str::FromStr,
 };
+
 pub struct App {
   pub cfg: Config,
 }
@@ -32,21 +26,25 @@ impl App {
     debug!("App Config: {:?}", cfg);
     match shed_path.join("data/log").to_str() {
       Some(p) => {
-        rlib::logger::file("rlib=debug,trace", p, "shed").expect("logger init failed");
+        rlib::logger::file("shed=debug", p, "shed").expect("logger init failed");
       }
       None => rlib::logger::flexi("info").expect("logger init failed"),
     };
     App { cfg }
   }
 
-  pub fn init<P: AsRef<Path>>(&self, path: P, fmt: Option<&str>) -> Result<()> {
-    let p = path.as_ref();
-    println!("initializing {}...", &p.display());
-    match fmt {
-      Some("ron") | None => self.cfg.write(&p, None)?,
-      Some("json") => self.cfg.write(&p, Some("json"))?,
-      Some("bin") => self.cfg.write(&p, Some("bin"))?,
-      Some(_) => error!("unknown configuration type"),
+  pub fn init_cfg(&self, fmt: Option<&str>) -> Result<()> {
+    let p = Path::new(env!("CFG"));
+    if !p.join("shed.cfg").exists() {
+      println!("writing shed.cfg to {}...", p.display());
+      match fmt {
+        Some("ron") | None => self.cfg.write(&p, None)?,
+        Some("json") => self.cfg.write(&p, Some("json"))?,
+        Some("bin") => self.cfg.write(&p, Some("bin"))?,
+        Some(_) => error!("unknown configuration type"),
+      }
+    } else {
+      error!("{} already exists", p.display());
     }
     Ok(())
   }
@@ -66,6 +64,15 @@ impl App {
     Ok(())
   }
 
+  pub async fn edit(self, input: &str) -> Result<(), Error> {
+    if input.eq("cfg") {
+      let cfg = option_env!("SHED_CFG").unwrap();
+      emacsclient(vec!["-t", cfg]).await.unwrap();
+    } else {
+      emacsclient(vec!["-t", input]).await.unwrap();
+    }
+    Ok(())
+  }
   pub async fn serve(&self, engine: &str) -> Result<()> {
     match engine {
       "hg" => hgweb(&self.cfg.hg)
@@ -82,7 +89,7 @@ impl App {
   }
 
   pub async fn dl(&self, t: &str, resource: &str) -> Result<(), NetErr> {
-    let cfg = self.cfg.network.clone();
+    let cfg = self.cfg.net.clone();
     let _client = Client { cfg };
     let dst = self.cfg.path.join("stash/tmp/");
     match t {
@@ -97,17 +104,27 @@ impl App {
       }
       "dm" => println!("sending message to: {}", resource),
       "drive" => {
-        let hd = tenex::google::drive_handle(Oauth2Config::default())
-          .await
-          .unwrap();
-        hd.files()
-          .list()
-          .supports_team_drives(false)
-          .supports_all_drives(true)
-          //          .corpora("sed")
-          .doit()
-          .await
-          .expect("google_drive failed!");
+        
+        let auth = &self.cfg.usr.auth;
+        if auth.is_empty() {
+          error!("no AuthConfig!");
+        } else {
+          for i in auth.into_iter() {
+            if i.provider.0 == "google" || i.oauth.is_some() {
+              let hd = tenex::google::drive_handle(i.oauth.to_owned().unwrap())
+                .await
+                .unwrap();
+              hd.files()
+                .list()
+                .supports_team_drives(false)
+                .supports_all_drives(true)
+              //          .corpora("sed")
+                .doit()
+                .await
+                .expect("google_drive failed!");
+            }
+          }
+        }
       }
       "cdn" => {
         let u = format!("https://cdn.rwest.io/{}", &resource);
@@ -118,15 +135,15 @@ impl App {
         download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
       }
       "http" => {
-        let u = format!("http:{}", &resource);
+        let u = format!("http://{}", &resource);
         download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
       }
       "https" => {
-        let u = format!("https:{}", &resource);
+        let u = format!("https://{}", &resource);
         download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
       }
       "ssh" => {
-        let cfg = SshConfig::default();
+        let _cfg = &self.cfg.usr.auth;
         println!("requesting resource over ssh: {}", resource);
       }
       _ => error!("unrecognized server type {:?}", t),
@@ -135,17 +152,16 @@ impl App {
   }
 }
 
+/// HTTP download client
+///
+/// note: correct way to do this is by using shared rlib::net::reqwest::Client
 async fn download<P: AsRef<Path>>(url: reqwest::Url, path: P) -> Result<(), NetErr> {
   let res = reqwest::get(url).await?;
   let mut dst = {
-    let fname = res
-      .url()
-      .path_segments()
+    let fname = res.url().path_segments()
       .and_then(|segments| segments.last())
-      .and_then(|name| if name.is_empty() { None } else { Some(name) })
-      .expect("could not create path for url");
-    let fname = path.as_ref().join(fname);
-    println!("downloading file to {}", fname.display());
+      .and_then(|name| if name.is_empty() { None } else { Some(name) });
+    let fname = path.as_ref().join(fname.expect("failed to parse path from objurl"));
     File::create(fname)?
   };
   let content = res.text().await?;

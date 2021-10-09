@@ -17,6 +17,10 @@ pub fn build_cli() -> App<'static> {
         .takes_value(true)
         .global(true),
     )
+    .arg(Arg::new("log_level").short('?')
+         .about("set the log level")
+        .multiple_occurrences(true)
+        .global(true))
     .subcommands(vec![
       App::new("init")
         .about("initialize the shed")
@@ -67,7 +71,7 @@ pub fn build_cli() -> App<'static> {
         .arg(Arg::new("input").takes_value(true))
         .arg(Arg::new("output").takes_value(true).default_value(".")),
       App::new("unpack")
-        .about("unpack .zst or .tz files")
+        .about("unpack .z or .tz files")
         .arg(Arg::new("input").takes_value(true))
         .arg(
           Arg::new("output")
@@ -80,6 +84,11 @@ pub fn build_cli() -> App<'static> {
             .short('r')
             .about("consume input package"),
         ),
+      App::new("download").about("fetch resources").alias("dl").arg(
+        Arg::new("input")
+          .takes_value(true)
+          .about("object URI")
+      ),
       App::new("pull").about("fetch resources").arg(
         Arg::new("input")
           .takes_value(true)
@@ -122,14 +131,13 @@ pub fn build_cli() -> App<'static> {
           Arg::new("repl")
             .takes_value(true)
             .default_value("dmc")
-            .possible_values(&["dmc", "py", "bqn", "k", "apl", "erl", "lua"]),
         )
         .arg(
           Arg::new("command")
             .takes_value(true)
             .multiple_values(true)
             .short('x')
-            .about("execute a command"),
+            .about("execute a command")
         )
         .arg(
           Arg::new("module")
@@ -141,6 +149,7 @@ pub fn build_cli() -> App<'static> {
         .arg(
           Arg::new("script")
             .takes_value(true)
+            .multiple_values(true)
             .alias("file")
             .short('s')
             .short_alias('f')
