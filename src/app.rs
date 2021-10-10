@@ -5,7 +5,7 @@ use rlib::{db::{registry::Registry, Error as DbErr}, kala::{
       shell::{make, emacsclient},
     },
     Error as KErr,
-  }, logger::log::{error,debug}, net::{
+  }, logger::log::{error,info}, net::{
     reqwest::{self, Url},
     Client, Error as NetErr,
   }, obj::{Error, config::Oauth2Config}, util::Result};
@@ -23,7 +23,7 @@ pub struct App {
 impl App {
   pub fn new(cfg: Config) -> Self {
     let shed_path: PathBuf = cfg.path.clone();
-    debug!("App Config: {:?}", cfg);
+    info!("App Config: {:?}", cfg);
     match shed_path.join("data/log").to_str() {
       Some(p) => {
         rlib::logger::file("shed=debug", p, "shed").expect("logger init failed");
@@ -110,18 +110,15 @@ impl App {
           error!("no AuthConfig!");
         } else {
           for i in auth.into_iter() {
-            if i.provider.0 == "google" || i.oauth.is_some() {
-              let hd = tenex::google::drive_handle(i.oauth.to_owned().unwrap())
+            if i.provider.starts_with("google") || i.oauth.is_some() {
+              let mut hub = tenex::google::drive_handle(i.oauth.to_owned().expect("failed to parse google oauth config").into())
                 .await
                 .unwrap();
-              hd.files()
-                .list()
-                .supports_team_drives(false)
-                .supports_all_drives(true)
-              //          .corpora("sed")
-                .doit()
+              let (r, q) = hub.files().list().supports_all_drives(true).q(format!("name = '{}'",resource).as_str()).doit()
                 .await
                 .expect("google_drive failed!");
+              println!("response: \n  {:#?}", r.body());
+              hub.files().get(q.files.unwrap().first().unwrap().id.as_ref().unwrap().as_str()).doit().await.unwrap();
             }
           }
         }

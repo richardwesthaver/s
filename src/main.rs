@@ -161,7 +161,7 @@ async fn main() -> Result<()> {
         match opt.value_of("input") {
           Some(i) => {
             let s: Vec<&str> = i.split(":").collect();
-            info!("downloading {} from {}...", s[0], s[1]);
+            info!("downloading {} from {}...", s[1], s[0]);
             app.dl(s[0], s[1]).await?;
           },
           None => {error!("an object URI is required!")}
