@@ -9,7 +9,7 @@ use rlib::{db::{registry::Registry, Error as DbErr}, kala::{
     reqwest::{self, Url},
     Client, Error as NetErr,
   }, obj::{Error, config::Oauth2Config}, util::Result};
-
+use tenex::client::google::Scope;
 use std::{
   fs::File,
   path::{Path, PathBuf},
@@ -22,8 +22,8 @@ pub struct App {
 
 impl App {
   pub fn new(cfg: Config) -> Self {
-    let shed_path: PathBuf = cfg.path.clone();
     info!("App Config: {:?}", cfg);
+    let shed_path: PathBuf = cfg.path.clone();
     match shed_path.join("data/log").to_str() {
       Some(p) => {
         rlib::logger::file("shed=debug", p, "shed").expect("logger init failed");
@@ -57,7 +57,7 @@ impl App {
     Ok(())
   }
 
-  pub fn db_init(&self) -> Result<(), DbErr> {
+  pub fn init_db(&self) -> Result<(), DbErr> {
     let db_path: PathBuf = self.cfg.path.clone().join("data/db");
     std::fs::remove_dir_all(&db_path)?;
     Registry::new(&db_path)?;
@@ -117,8 +117,9 @@ impl App {
               let (r, q) = hub.files().list().supports_all_drives(true).q(format!("name = '{}'",resource).as_str()).doit()
                 .await
                 .expect("google_drive failed!");
-              println!("response: \n  {:#?}", r.body());
-              hub.files().get(q.files.unwrap().first().unwrap().id.as_ref().unwrap().as_str()).doit().await.unwrap();
+              info!("file_list status: {}", r.status());
+              let f = hub.files().get(q.files.unwrap().first().unwrap().id.as_ref().unwrap().as_str()).param("alt", "media").add_scope(Scope::Full).doit().await.unwrap();
+              println!("{:?}", f.0.body());
             }
           }
         }

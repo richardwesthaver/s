@@ -14,7 +14,7 @@ use rlib::{
   logger::log::{error, info},
   kala::cmd::shell::emacsclient,
   obj::{
-    config::{HgwebConfig, MercurialConfig, NetworkConfig, PackageConfig, Oauth2Config, SshConfig, UserConfig, ProjectConfig},
+    config::{HgwebConfig, MercurialConfig, NetworkConfig, PackageConfig, Oauth2Config, SshConfig, UserConfig, ProjectConfig, ProgramConfig},
     ron::de::from_reader,
     Result,
     impl_config,
@@ -28,6 +28,7 @@ use serde::{Deserialize, Serialize};
 pub struct Config {
   pub path: PathBuf, // the shed path on disk
   pub src: Vec<PackageConfig>,
+  pub bin: Vec<ProgramConfig>,
   pub net: NetworkConfig,
   pub hg: MercurialConfig,
   pub lab: Vec<ProjectConfig>,
@@ -49,6 +50,7 @@ impl Config {
         option_env!("SHED").unwrap_or("~/shed")
       ),
       src: vec![],
+      bin: vec![],
       net: NetworkConfig::default(),
       hg,
       lab,

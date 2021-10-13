@@ -25,7 +25,7 @@ use rlib::{
     hg::hg,
     midi::list_midi_ports,
     shell::emacsclient,
-    repl::{bqn, dyalog, erl, gnu_apl, k, k9, lua},
+    repl::{bqn, dyalog, erl, gnu_apl, k, k9, lua, awesome_client},
     sys::{describe_host, usb_devices},
   },
   logger::log::{debug, error, info},
@@ -146,9 +146,10 @@ async fn main() -> Result<()> {
       }
       ("init", opt) => {
         if opt.is_present("db") {
-          app.db_init()?;
+          app.init_db()?;
+        } else {
+          app.init_cfg(opt.value_of("fmt"))?;
         }
-        app.init_cfg(opt.value_of("fmt"))?;
       }
       ("serve", opt) => {
         println!("starting server...");
@@ -224,13 +225,12 @@ async fn main() -> Result<()> {
               emacsclient(vec!["-t","-e","(ielm)"]).await?;
             }
             "k" => {
-              let args = opt.value_of("command").unwrap();
               if let Some("k9") = opt.value_of("interpreter") {
                 println!("running shakti (k9) interpreter");
-                k9(vec![args]).await?;
+                k9(vec![]).await?;
               } else {
                 println!("running ngn/k (k6) interpreter");
-                k(vec![args]).await?;
+                k(vec![]).await?;
               }
             }
             "erl" => {
@@ -250,25 +250,23 @@ async fn main() -> Result<()> {
               dmc::run()?;
             }
             "lua" => {
-              println!("running Lua interpreter");
-              args.insert(0, "-i");
-              if let Some(i) = opt.values_of("script") {
-                for i in i.into_iter() {
-                  args.append(vec!["--", i].as_mut());
-                }
-              }
-              if let Some(i) = opt.values_of("command") {
-                for i in i.into_iter() {
+              if let Some(i) = opt.value_of("command") {
                   args.append(vec!["-e", i].as_mut());
-                }
               }
-              if let Some(i) = opt.values_of("module") {
-                for i in i.into_iter() {
+              if let Some(i) = opt.value_of("module") {
                   args.append(vec!["-l", i].as_mut());
-                }
               }
-              lua(args).await?;
-            }
+              if let Some(i) = opt.value_of("script") {
+                  args.append(vec![i].as_mut());
+              }
+              if let Some("awesome") = opt.value_of("interpreter") {
+                info!("running awesome-client");
+                awesome_client(args).await?;
+              } else {
+                info!("running Lua interpreter");
+                lua(args).await?;
+              }
+            },
             _ => {
               println!("unknown REPL type");
             }
