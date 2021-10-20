@@ -12,9 +12,9 @@ fn main() -> Result<()> {
   let o = var("OUT_DIR")?;
   let c = (&mut build_cli(), "shed", &o);
 
-  generate_to::<Bash, _, _>(c.0, c.1, c.2)?;
-  generate_to::<Zsh, _, _>(c.0, c.1, c.2)?;
-  generate_to::<PowerShell, _, _>(c.0, c.1, c.2)?;
+  generate_to(Bash, c.0, c.1, c.2)?;
+  generate_to(Zsh, c.0, c.1, c.2)?;
+  generate_to(PowerShell, c.0, c.1, c.2)?;
 
   if var("PROFILE")?.eq("release") {
     std::fs::copy(

@@ -8,7 +8,7 @@ use rlib::{db::{registry::Registry, Error as DbErr}, kala::{
   }, logger::log::{error,info}, net::{
     reqwest::{self, Url},
     Client, Error as NetErr,
-  }, obj::{Error, config::Oauth2Config}, util::Result};
+  }, obj::Error, util::Result};
 use tenex::client::google::Scope;
 use std::{
   fs::File,
@@ -21,7 +21,7 @@ pub struct App {
 }
 
 impl App {
-  pub fn new(cfg: Config) -> Self {
+  pub fn start(cfg: Config) -> Self {
     info!("App Config: {:?}", cfg);
     let shed_path: PathBuf = cfg.path.clone();
     match shed_path.join("data/log").to_str() {
@@ -75,17 +75,13 @@ impl App {
   }
   pub async fn serve(&self, engine: &str) -> Result<()> {
     match engine {
-      "hg" => hgweb(&self.cfg.hg)
-        .await
-        .expect("encountered error in hg_serve process"),
-      "dm" => {
-        println!("waiting for dm...")
-      }
-      _ => {
-        error!("unrecognized server type!")
-      }
+      "hg" => {
+	hgweb(&self.cfg.hg).await?;
+	Ok(())
+      },
+      "dm" => Ok(println!("waiting for dm...")),
+      _ => Ok(error!("unrecognized server type!")),
     }
-    Ok(())
   }
 
   pub async fn dl(&self, t: &str, resource: &str) -> Result<(), NetErr> {
@@ -96,9 +92,9 @@ impl App {
       "hg" => {
         let u = format!("https://hg.rwest.io/{}", &resource);
         if resource.eq(".") {
-          hg(vec!["pull"]).await;
+          hg(&["pull"]).await?;
         } else {
-          hg(vec!["clone", &u, dst.to_str().unwrap()]).await; // this should be fallible
+          hg(&["clone", &u, dst.to_str().unwrap()]).await?;
           println!("repo created at {}", dst.display());
         }
       }
@@ -111,7 +107,7 @@ impl App {
         } else {
           for i in auth.into_iter() {
             if i.provider.starts_with("google") || i.oauth.is_some() {
-              let mut hub = tenex::google::drive_handle(i.oauth.to_owned().expect("failed to parse google oauth config").into())
+              let hub = tenex::google::drive_handle(i.oauth.to_owned().expect("failed to parse google oauth config").into())
                 .await
                 .unwrap();
               let (r, q) = hub.files().list().supports_all_drives(true).q(format!("name = '{}'",resource).as_str()).doit()

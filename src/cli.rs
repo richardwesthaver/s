@@ -1,13 +1,11 @@
-use rlib::util::cli::{App, AppSettings, Arg};
+use rlib::util::cli::{App, AppSettings, Arg, ColorChoice};
 pub fn build_cli() -> App<'static> {
   App::new("shed")
     .author("ellis <ellis@rwest.io>")
     .about("shed multi-development tool")
-    .setting(AppSettings::ColorAuto)
-    .setting(AppSettings::ColoredHelp)
-    .setting(AppSettings::DisableVersionForSubcommands)
     .setting(AppSettings::TrailingVarArg)
     .setting(AppSettings::ArgRequiredElseHelp)
+    .color(ColorChoice::Auto)
     .arg(
       Arg::new("config")
         .short('c')

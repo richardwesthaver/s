@@ -1,4 +1,4 @@
-//! # shed
+//! main.rs --- shed CLI
 //!
 //! A Shed is a collections of development resources such as code,
 //! configs, docs, and data. It is intended to be an `org-specific`
@@ -7,27 +7,35 @@
 //!
 //! This program is a development tool I use to manage such
 //! structures.
-#![feature(drain_filter)]
 
+//      _              _   
+//     | |            | |  
+//  ___| |__   ___  __| |  
+// / __| '_ \ / _ \/ _` |  
+// \__ \ | | |  __/ (_| |  
+// |___/_| |_|\___|\__,_|  
+                          
+#![feature(drain_filter)]
 mod app;
 use app::App;
 mod cli;
 use cli::build_cli;
 mod config;
 use config::Config;
-mod repl;
-use repl::{dmc, python};
+mod dmc;
 
 //rlib
 use rlib::{
   ctx, flate,
-  kala::cmd::{
+  kala::{
+    python,
+    cmd::{
     hg::hg,
     midi::list_midi_ports,
     shell::emacsclient,
-    repl::{bqn, dyalog, erl, gnu_apl, k, k9, lua, awesome_client},
+    repl::{bqn, dyalog, erl, apl, k, shakti, lua},
     sys::{describe_host, usb_devices},
-  },
+  }},
   logger::log::{debug, error, info},
   obj::config::Configure,
   obj::Objective,
@@ -58,7 +66,7 @@ async fn main() -> Result<()> {
     }
   };
 
-  let mut app = App::new(cfg);
+  let mut app = App::start(cfg);
 
   if let Some(cmd) = cli.subcommand() {
     match cmd {
@@ -124,21 +132,21 @@ async fn main() -> Result<()> {
               let cd = env::current_dir()?;
               env::set_current_dir(&Path::new(i))?;
               if opt.is_present("remote") {
-                hg(vec!["summary", "--remote"]).await;
-                hg(vec!["status"]).await; //needs error handling
+                hg(&["summary", "--remote"]).await?;
+                hg(&["status"]).await?;
               } else {
-                hg(vec!["summary"]).await;
-                hg(vec!["status"]).await;
+                hg(&["summary"]).await?;
+                hg(&["status"]).await?;
               }
               env::set_current_dir(cd)?;
             }
             None => {
               if opt.is_present("remote") {
-                hg(vec!["summary", "--remote"]).await;
-                hg(vec!["status"]).await; //needs error handling
+                hg(&["summary", "--remote"]).await?;
+                hg(&["status"]).await?;
               } else {
-                hg(vec!["summary"]).await;
-                hg(vec!["status"]).await;
+                hg(&["summary"]).await?;
+                hg(&["status"]).await?;
               }
             }
           }
@@ -169,10 +177,10 @@ async fn main() -> Result<()> {
         };
       }
       ("push", _opt) => {
-        hg(vec!["push"]).await;
+        hg(&["push"]).await?;
       }
       ("pull", _opt) => {
-        hg(vec!["pull"]).await;
+        hg(&["pull"]).await?;
       }
       ("store", _opt) => {
         println!("running store...");
@@ -227,7 +235,7 @@ async fn main() -> Result<()> {
             "k" => {
               if let Some("k9") = opt.value_of("interpreter") {
                 println!("running shakti (k9) interpreter");
-                k9(vec![]).await?;
+                shakti(vec![]).await?;
               } else {
                 println!("running ngn/k (k6) interpreter");
                 k(vec![]).await?;
@@ -239,7 +247,7 @@ async fn main() -> Result<()> {
             }
             "apl" => {
               if let Some("gnu") = it {
-                gnu_apl(vec![]).await?;
+                apl(vec![]).await?;
               } else {
                 println!("running APL interpreter: Dyalog");
                 dyalog(vec!["-b"]).await?;
@@ -259,13 +267,8 @@ async fn main() -> Result<()> {
               if let Some(i) = opt.value_of("script") {
                   args.append(vec![i].as_mut());
               }
-              if let Some("awesome") = opt.value_of("interpreter") {
-                info!("running awesome-client");
-                awesome_client(args).await?;
-              } else {
-                info!("running Lua interpreter");
-                lua(args).await?;
-              }
+              info!("running Lua interpreter");
+              lua(args).await?;
             },
             _ => {
               println!("unknown REPL type");
@@ -286,7 +289,7 @@ async fn main() -> Result<()> {
           }
         }
       }
-      ("clean", opt) => {
+      ("clean", _opt) => {
 
       }
       (&_, _) => {

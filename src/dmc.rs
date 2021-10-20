@@ -1,4 +1,4 @@
-use rlib::kala::cmd::input::rustyline::{
+use rustyline::{
   completion::{Completer, FilenameCompleter, Pair},
   config::OutputStreamType,
   error::ReadlineError,

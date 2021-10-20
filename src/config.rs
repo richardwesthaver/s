@@ -12,9 +12,8 @@ use crate::{Configure, Objective};
 
 use rlib::{
   logger::log::{error, info},
-  kala::cmd::shell::emacsclient,
   obj::{
-    config::{HgwebConfig, MercurialConfig, NetworkConfig, PackageConfig, Oauth2Config, SshConfig, UserConfig, ProjectConfig, ProgramConfig},
+    config::{HgwebConfig, MercurialConfig, NetworkConfig, PackageConfig, UserConfig, ProjectConfig, ProgramConfig},
     ron::de::from_reader,
     Result,
     impl_config,
