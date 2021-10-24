@@ -174,7 +174,7 @@ $ emacsclient -c
         (or (bolp) (newline)))))
 
 
-;;;; Coding 
+;;;; Protocol
 (defun shed-proto-insert-string (string)
   (insert string 0 (make-string (- 3 (% (length string) 4)) 0)))
 
@@ -232,6 +232,20 @@ $ emacsclient -c
         (item      repeat (items)
                    (struct data-spec))))
 
+;;;; Shells 
+(defcustom shed-x-buffer-name "X"
+  "Default buffer name for X interpreters"
+  :type 'string
+  :group 'shed
+  :safe 'stringp)
+
+;;;;; Python
+(setq python-shell-interpreter "shed"
+      python-shell-interpreter-interactive-arg "x py"
+      python-shell-interpreter-args "x py"
+      python-shell-prompt-detect-failure-warning nil
+      python-shell-prompt-regexp ">>>>>")
+(push "shed" python-shell-completion-native-disabled-interpreters)
 ;;;; pkg 
 (provide 'shed)
 ;;; shed.el ends here
