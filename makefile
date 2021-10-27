@@ -1,9 +1,19 @@
 # makefile --- shed makefile
-o:lisp/shed.el build.rs Cargo.toml src;mkdir -p $@;cargo build --release;cp target/release/shed $@;cp $< $@
+RS:=build.rs Cargo.toml src rustfmt.toml
+
+.PHONY: b t f c m
+
+o:lisp/shed.el $(RS);mkdir -p $@; \
+cargo build --release;cp target/release/shc $@;cp $< $@
+
+i:o;install -pm 755 $</shc $(SHED)/bin
+
 b:build.rs Cargo.toml src;cargo build
-f:rustfmt.toml;cargo fmt --all
-t:;cargo test --all
+
+f:$(RS);cargo fmt
+
+t:$(RS) tests;cargo test --all
+
 c:;cargo clean;rm -rf o Cargo.lock
-i:o;install -pm 755 $</shed $(SHED)/bin
-w:
-.PHONY: f t c i
+
+m:;shc meta -u 		# TODO 2021-10-26

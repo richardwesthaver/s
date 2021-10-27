@@ -1,2 +1,3 @@
 ^target/
-glob:Cargo.lock
+^o/
+Cargo.lock

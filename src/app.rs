@@ -1,15 +1,26 @@
-use crate::Config;
-use rlib::{db::{registry::Registry, Error as DbErr}, kala::{
+/// app.rs --- shed client backend
+use crate::config::Config;
+
+use rlib::{
+  db::{registry::Registry, Error as DbErr},
+  kala::{
     cmd::{
       hg::{hg, hgweb},
-      shell::{make, emacsclient},
+      shell::{emacsclient, make},
     },
     Error as KErr,
-  }, logger::log::{error,info}, net::{
+  },
+  logger::log::{error, info},
+  net::{
     reqwest::{self, Url},
     Client, Error as NetErr,
-  }, obj::Error, util::Result};
+  },
+  obj::Error,
+  util::Result,
+};
+
 use tenex::client::google::Scope;
+
 use std::{
   fs::File,
   path::{Path, PathBuf},
@@ -76,9 +87,9 @@ impl App {
   pub async fn serve(&self, engine: &str) -> Result<()> {
     match engine {
       "hg" => {
-	hgweb(&self.cfg.hg).await?;
-	Ok(())
-      },
+        hgweb(&self.cfg.hg).await?;
+        Ok(())
+      }
       "dm" => Ok(println!("waiting for dm...")),
       _ => Ok(error!("unrecognized server type!")),
     }
@@ -100,21 +111,46 @@ impl App {
       }
       "dm" => println!("sending message to: {}", resource),
       "drive" => {
-        
         let auth = &self.cfg.usr.auth;
         if auth.is_empty() {
           error!("no AuthConfig!");
         } else {
           for i in auth.into_iter() {
             if i.provider.starts_with("google") || i.oauth.is_some() {
-              let hub = tenex::google::drive_handle(i.oauth.to_owned().expect("failed to parse google oauth config").into())
-                .await
-                .unwrap();
-              let (r, q) = hub.files().list().supports_all_drives(true).q(format!("name = '{}'",resource).as_str()).doit()
+              let hub = tenex::google::drive_handle(
+                i.oauth
+                  .to_owned()
+                  .expect("failed to parse google oauth config")
+                  .into(),
+              )
+              .await
+              .unwrap();
+              let (r, q) = hub
+                .files()
+                .list()
+                .supports_all_drives(true)
+                .q(format!("name = '{}'", resource).as_str())
+                .doit()
                 .await
                 .expect("google_drive failed!");
               info!("file_list status: {}", r.status());
-              let f = hub.files().get(q.files.unwrap().first().unwrap().id.as_ref().unwrap().as_str()).param("alt", "media").add_scope(Scope::Full).doit().await.unwrap();
+              let f = hub
+                .files()
+                .get(
+                  q.files
+                    .unwrap()
+                    .first()
+                    .unwrap()
+                    .id
+                    .as_ref()
+                    .unwrap()
+                    .as_str(),
+                )
+                .param("alt", "media")
+                .add_scope(Scope::Full)
+                .doit()
+                .await
+                .unwrap();
               println!("{:?}", f.0.body());
             }
           }
@@ -152,10 +188,14 @@ impl App {
 async fn download<P: AsRef<Path>>(url: reqwest::Url, path: P) -> Result<(), NetErr> {
   let res = reqwest::get(url).await?;
   let mut dst = {
-    let fname = res.url().path_segments()
+    let fname = res
+      .url()
+      .path_segments()
       .and_then(|segments| segments.last())
       .and_then(|name| if name.is_empty() { None } else { Some(name) });
-    let fname = path.as_ref().join(fname.expect("failed to parse path from objurl"));
+    let fname = path
+      .as_ref()
+      .join(fname.expect("failed to parse path from objurl"));
     File::create(fname)?
   };
   let content = res.text().await?;

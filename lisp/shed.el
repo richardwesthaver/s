@@ -2,7 +2,7 @@
 ;; Copyright (C) 2021  ellis
 ;; 
 ;; Author: ellis
-;; Keywords: local
+;; Keywords: local, vc, net, process
 ;; 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,29 +24,27 @@
 ;; 
 ;;; Code:
 (defgroup shed nil
-  "Shed Emacs Modules")
+  "shed Emacs Modules")
 
 (defcustom shed-dir "~/shed/"
-  "Shed directory.")
+  "shed directory.")
 
 (defcustom shed-data-dir "~/shed/data/"
-  "Shed data directory.")
-
-(setq bookmark-default-file "~/shed/data/emacs/bookmarks")
+  "shed data directory.")
 
 ;;;; Daemon 
 (defgroup shed-daemon ()
-  "Shed emacs daemon settings"
+  "shed emacs daemon settings"
   :group 'shed)
 
 (defcustom server-after-make-frame-hook nil
-  "Hook run when the Shed server creates a client frame.
+  "Hook run when the shed server creates a client frame.
 The created frame is selected when the hook is called."
   :type 'hook
   :version "27.1")
 
 (defcustom server-done-hook nil
-  "Hook run when done editing a buffer for the Shed server."
+  "Hook run when done editing a buffer for the shed server."
   :type 'hook)
 
 (defvar server-process nil

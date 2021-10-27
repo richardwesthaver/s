@@ -1,50 +1,28 @@
-//! main.rs --- shed CLI
-//!
-//! A Shed is a collections of development resources such as code,
-//! configs, docs, and data. It is intended to be an `org-specific`
-//! structure which is maintained internally and encapsulates all of
-//! the best native development practices - good or bad.
-//!
-//! This program is a development tool I use to manage such
-//! structures.
+/// bin/shc.rs --- shed-client
+use shed::{
+  app::App,
+  cli::build_cli,
+  config::Config,
+};
 
-//      _              _   
-//     | |            | |  
-//  ___| |__   ___  __| |  
-// / __| '_ \ / _ \/ _` |  
-// \__ \ | | |  __/ (_| |  
-// |___/_| |_|\___|\__,_|  
-                          
-#![feature(drain_filter)]
-mod app;
-use app::App;
-mod cli;
-use cli::build_cli;
-mod config;
-use config::Config;
-mod dmc;
-
-//rlib
 use rlib::{
   ctx, flate,
   kala::{
-    python,
     cmd::{
-    hg::hg,
-    midi::list_midi_ports,
-    shell::emacsclient,
-    repl::{bqn, dyalog, erl, apl, k, shakti, lua},
-    sys::{describe_host, usb_devices},
-  }},
+      hg::hg,
+      midi::list_midi_ports,
+      repl::{apl, bqn, dyalog, erl, k, lua, shakti},
+      shell::emacsclient,
+      sys::{describe_host, usb_devices},
+    },
+    dmc, python,
+  },
   logger::log::{debug, error, info},
-  obj::config::Configure,
-  obj::Objective,
   util::Result,
 };
-//tenex
+
 use tenex::{ipapi::get_ip, nws::weather_report};
 
-//std
 use std::{env, path::Path};
 
 #[ctx::main]
@@ -172,8 +150,10 @@ async fn main() -> Result<()> {
             let s: Vec<&str> = i.split(":").collect();
             info!("downloading {} from {}...", s[1], s[0]);
             app.dl(s[0], s[1]).await?;
-          },
-          None => {error!("an object URI is required!")}
+          }
+          None => {
+            error!("an object URI is required!")
+          }
         };
       }
       ("push", _opt) => {
@@ -213,14 +193,14 @@ async fn main() -> Result<()> {
               println!("running BQN interpreter");
               if let Some(f) = opt.values_of("script") {
                 args.insert(0, "-f");
-                for (x,i) in f.enumerate() {
-                args.insert(x, i);
+                for (x, i) in f.enumerate() {
+                  args.insert(x, i);
                 }
                 bqn(args).await?;
               } else if let Some(f) = opt.values_of("command") {
                 args.insert(0, "-p");
-                for (x,i) in f.enumerate() {
-                args.insert(x, i);
+                for (x, i) in f.enumerate() {
+                  args.insert(x, i);
                 }
                 bqn(args).await?;
               } else {
@@ -230,7 +210,7 @@ async fn main() -> Result<()> {
             }
             "elisp" | "el" => {
               println!("running IELM");
-              emacsclient(vec!["-t","-e","(ielm)"]).await?;
+              emacsclient(vec!["-t", "-e", "(ielm)"]).await?;
             }
             "k" => {
               if let Some("k9") = opt.value_of("interpreter") {
@@ -259,17 +239,17 @@ async fn main() -> Result<()> {
             }
             "lua" => {
               if let Some(i) = opt.value_of("command") {
-                  args.append(vec!["-e", i].as_mut());
+                args.append(vec!["-e", i].as_mut());
               }
               if let Some(i) = opt.value_of("module") {
-                  args.append(vec!["-l", i].as_mut());
+                args.append(vec!["-l", i].as_mut());
               }
               if let Some(i) = opt.value_of("script") {
-                  args.append(vec![i].as_mut());
+                args.append(vec![i].as_mut());
               }
               info!("running Lua interpreter");
               lua(args).await?;
-            },
+            }
             _ => {
               println!("unknown REPL type");
             }
@@ -279,19 +259,15 @@ async fn main() -> Result<()> {
           dmc::run()?;
         }
       }
-      ("edit", opt) => {
-        match opt.value_of("input") {
-          Some(i) => {
-            app.edit(i).await?;
-          },
-          None => {
-            app.edit(".").await?;
-          }
+      ("edit", opt) => match opt.value_of("input") {
+        Some(i) => {
+          app.edit(i).await?;
         }
-      }
-      ("clean", _opt) => {
-
-      }
+        None => {
+          app.edit(".").await?;
+        }
+      },
+      ("clean", _opt) => {}
       (&_, _) => {
         error!("cmd not found");
       }

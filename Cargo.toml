@@ -5,20 +5,34 @@ authors = ["ellis"]
 edition = "2021"
 documentation = "https://docs.rwest.io/shed"
 repository = "https://hg.rwest.io/shed"
-readme = "META"
-license-file = "COPYING"
-description = "a hacker tool"
+readme = "readme"
+license-file = "copying"
+description = "self-hosted dev env"
 publish = ["crater"]
+default-run = "shc"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "shc"
+path = "src/bin/shc.rs"
+
+[[bin]]
+name = "shs"
+path = "src/bin/shs.rs"
+
+[[bin]]
+name = "shd"
+path = "src/bin/shd.rs"
+
 [dependencies]
 # rlib
-rlib = { version = "0.1.0", path = "../rlib", features = ["logger", "ctx", "cli", "bs", "obj", "flate", "db", "net", "hg", "python", "sys", "midi"] }
+rlib = { version = "0.1.0", path = "../rlib", features = ["logger", "ctx", "cli", "bs", "obj", "flate", "db", "net", "hg", "python", "dmc", "sys", "midi"] }
 tenex = { version = "0.1.0", path = "../tenex", features = ["ipapi", "nws", "google"] }
 # contrib
-libc = "0.2"
 serde = { version = "1.0.128", features = ["derive"] }
 clap = { version = "3.0.0-beta.5", features = ["suggestions", "color", "derive", "env", "cargo", "wrap_help"] }
-rustyline-derive = { version = "0.5" }
-rustyline = {version = "9.0.0"}
 [build-dependencies]
 rlib = { version = "0.1.0", path = "../rlib", features = ["bs", "flate2", "cli"] }
 #dirs = { package = "dirs-next", version = "2.0.0" }

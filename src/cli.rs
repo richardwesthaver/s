@@ -1,3 +1,4 @@
+/// cli.rs --- shed client cli
 use rlib::util::cli::{App, AppSettings, Arg, ColorChoice};
 pub fn build_cli() -> App<'static> {
   App::new("shed")
@@ -15,10 +16,13 @@ pub fn build_cli() -> App<'static> {
         .takes_value(true)
         .global(true),
     )
-    .arg(Arg::new("log_level").short('?')
-         .about("set the log level")
+    .arg(
+      Arg::new("log_level")
+        .short('?')
+        .about("set the log level")
         .multiple_occurrences(true)
-        .global(true))
+        .global(true),
+    )
     .subcommands(vec![
       App::new("init")
         .about("initialize the shed")
@@ -82,11 +86,10 @@ pub fn build_cli() -> App<'static> {
             .short('r')
             .about("consume input package"),
         ),
-      App::new("download").about("fetch resources").alias("dl").arg(
-        Arg::new("input")
-          .takes_value(true)
-          .about("object URI")
-      ),
+      App::new("download")
+        .about("fetch resources")
+        .alias("dl")
+        .arg(Arg::new("input").takes_value(true).about("object URI")),
       App::new("pull").about("fetch resources").arg(
         Arg::new("input")
           .takes_value(true)
@@ -125,17 +128,13 @@ pub fn build_cli() -> App<'static> {
         ),
       App::new("x")
         .about("do things with runtimes")
-        .arg(
-          Arg::new("repl")
-            .takes_value(true)
-            .default_value("dmc")
-        )
+        .arg(Arg::new("repl").takes_value(true).default_value("dmc"))
         .arg(
           Arg::new("command")
             .takes_value(true)
             .multiple_values(true)
             .short('x')
-            .about("execute a command")
+            .about("execute a command"),
         )
         .arg(
           Arg::new("module")

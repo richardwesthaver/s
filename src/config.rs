@@ -1,22 +1,21 @@
-//! config module
-//!
-//! Shed configuration layer.
-
+/// config.rs --- shed configurations
 use std::{
   collections::HashMap,
   fs,
   path::{Path, PathBuf},
 };
 
-use crate::{Configure, Objective};
-
 use rlib::{
   logger::log::{error, info},
   obj::{
-    config::{HgwebConfig, MercurialConfig, NetworkConfig, PackageConfig, UserConfig, ProjectConfig, ProgramConfig},
-    ron::de::from_reader,
-    Result,
+    Objective, Result,
+    config::{
+      Configure,
+      HgwebConfig, MercurialConfig, NetworkConfig, PackageConfig, ProgramConfig, ProjectConfig,
+      UserConfig,
+    },
     impl_config,
+    ron::de::from_reader,
   },
 };
 
@@ -45,15 +44,13 @@ impl Config {
     let lab = vec![];
     let usr = UserConfig::default();
     Config {
-      path: PathBuf::from(
-        option_env!("SHED").unwrap_or("~/shed")
-      ),
+      path: PathBuf::from(option_env!("SHED").unwrap_or("~/shed")),
       src: vec![],
       bin: vec![],
       net: NetworkConfig::default(),
       hg,
       lab,
-      usr
+      usr,
     }
   }
 
@@ -83,7 +80,7 @@ impl Config {
       Ok(x) => {
         info!("loading config: {:?}", x);
         x
-      },
+      }
       Err(e) => {
         error!("Failed to load config: {}", e);
         std::process::exit(1);
@@ -94,4 +91,3 @@ impl Config {
 }
 
 impl_config!(Config);
-
