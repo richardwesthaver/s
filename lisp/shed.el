@@ -26,11 +26,18 @@
 (defgroup shed nil
   "shed Emacs Modules")
 
-(defcustom shed-dir "~/shed/"
-  "shed directory.")
+(defcustom shed-dir "~/shed/" "shed directory.")
 
-(defcustom shed-data-dir "~/shed/data/"
+(defcustom shed-data-dir (file-name-as-directory (expand-file-name "data" shed-dir))
   "shed data directory.")
+(defcustom shed-src-dir (file-name-as-directory (expand-file-name "src" shed-dir))
+  "shed src directory.")
+(defcustom shed-stash-dir (file-name-as-directory (expand-file-name "stash" shed-dir))
+  "shed stash directory.")
+(defcustom shed-store-dir (file-name-as-directory (expand-file-name "store" shed-dir))
+  "shed store directory.")
+(defcustom shed-lab-dir (file-name-as-directory (expand-file-name "lab" shed-dir))
+  "shed lab directory.")
 
 ;;;; Daemon 
 (defgroup shed-daemon ()
@@ -243,7 +250,7 @@ $ emacsclient -c
       python-shell-interpreter-args "x py"
       python-shell-prompt-detect-failure-warning nil
       python-shell-prompt-regexp ">>>>>")
-(push "shed" python-shell-completion-native-disabled-interpreters)
+(setq python-shell-completion-native-disabled-interpreters "shed")
 ;;;; pkg 
 (provide 'shed)
 ;;; shed.el ends here
