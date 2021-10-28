@@ -22,7 +22,7 @@ use rlib::{
 use tenex::client::google::Scope;
 
 use std::{
-  fs::{File, create_dir, remove_file, remove_dir},
+  fs::{create_dir, remove_file, File},
   path::{Path, PathBuf},
   str::FromStr,
 };
@@ -96,12 +96,14 @@ impl App {
 
   pub async fn clean(self, input: &str) -> Result<()> {
     match input {
-      "cfg" => remove_file(option_env!("SHED_CFG").expect("poisoned env! SHED_CFG should be set."))?,
-      "log" => remove_file(self.cfg.path.join("data/log/shed.log")?,
+      "cfg" => {
+        remove_file(option_env!("SHED_CFG").expect("poisoned env! SHED_CFG should be set."))?
+      }
+      "log" => remove_file(self.cfg.path.join("data/log/shed.log"))?,
       _ => {
-	for i in self.cfg.src.iter() {
-	  println!("not actually removing {}, silly", i.name);
-	}
+        for i in self.cfg.src.iter() {
+          println!("not actually removing {}, silly", i.name);
+        }
       }
     }
     Ok(())

@@ -8,12 +8,9 @@ use std::{
 use rlib::{
   logger::log::{error, info},
   obj::{
-    Objective, Result,
-    config::{
-      Configure,
-      HgwebConfig, MercurialConfig, NetworkConfig, PackageConfig, ProgramConfig, ProjectConfig,
-      UserConfig,
-    },
+    Configure, Objective, Result, HgwebConfig, MercurialConfig,
+    NetworkConfig, PackageConfig, ProgramConfig, ProjectConfig,
+    UserConfig,
     impl_config,
     ron::de::from_reader,
   },

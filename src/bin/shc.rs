@@ -1,11 +1,8 @@
 /// bin/shc.rs --- shed-client
-use shed::{
-  app::App,
-  cli::build_cli,
-  config::Config,
-};
+use shed::{app::App, cli::build_cli, config::Config};
 
 use rlib::{
+  util::Result,
   ctx, flate,
   kala::{
     cmd::{
@@ -18,7 +15,6 @@ use rlib::{
     dmc, python,
   },
   logger::log::{debug, error, info},
-  util::Result,
 };
 
 use tenex::{ipapi::get_ip, nws::weather_report};
