@@ -22,7 +22,7 @@ use rlib::{
 use tenex::client::google::Scope;
 
 use std::{
-  fs::File,
+  fs::{File, create_dir, remove_file, remove_dir},
   path::{Path, PathBuf},
   str::FromStr,
 };
@@ -37,11 +37,20 @@ impl App {
     let shed_path: PathBuf = cfg.path.clone();
     match shed_path.join("data/log").to_str() {
       Some(p) => {
-        rlib::logger::file("shed=debug", p, "shed").expect("logger init failed");
+        rlib::logger::file("debug", p, "shed").expect("logger init failed");
       }
       None => rlib::logger::flexi("info").expect("logger init failed"),
     };
     App { cfg }
+  }
+
+  pub fn build_dirs(self) -> Result<()> {
+    let base = &self.cfg.path;
+    create_dir(base)?;
+    for i in ["stash", "store", "src", "lab", "data", "data/log"] {
+      create_dir(base.join(i))?;
+    }
+    Ok(())
   }
 
   pub fn init_cfg(&self, fmt: Option<&str>) -> Result<()> {
@@ -81,6 +90,19 @@ impl App {
       emacsclient(vec!["-t", cfg]).await.unwrap();
     } else {
       emacsclient(vec!["-t", input]).await.unwrap();
+    }
+    Ok(())
+  }
+
+  pub async fn clean(self, input: &str) -> Result<()> {
+    match input {
+      "cfg" => remove_file(option_env!("SHED_CFG").expect("poisoned env! SHED_CFG should be set."))?,
+      "log" => remove_file(self.cfg.path.join("data/log/shed.log")?,
+      _ => {
+	for i in self.cfg.src.iter() {
+	  println!("not actually removing {}, silly", i.name);
+	}
+      }
     }
     Ok(())
   }
@@ -157,11 +179,11 @@ impl App {
         }
       }
       "cdn" => {
-        let u = format!("https://cdn.rwest.io/{}", &resource);
+        let u = format!("https://rwest.io/a/{}", &resource);
         download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
       }
       "pkg" => {
-        let u = format!("https://pkg.rwest.io/{}", &resource);
+        let u = format!("https://rwest.io/y/{}", &resource);
         download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
       }
       "http" => {

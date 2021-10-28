@@ -1,2 +1,9 @@
 /// bin/shs.rs --- shed-server
-fn main() {}
+use rlib::{
+  ctx, logger::flexi, net::Result
+};
+
+#[ctx::main]
+async fn main() -> Result<()> {
+  flexi("trace")?;
+}

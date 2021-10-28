@@ -59,7 +59,7 @@ async fn main() -> Result<()> {
           } else {
             o.to_owned()
           };
-          info!("packing dir: {} => {} ", i, o);
+          info!("packing: {} => {} ", i, o);
           flate::pack(i, o, None);
         } else if Path::new(i).is_file() {
           let o = if o.eq(".") {
@@ -76,16 +76,13 @@ async fn main() -> Result<()> {
           &opt.value_of("input").unwrap(),
           &opt.value_of("output").unwrap(),
         );
-        if Path::new(i).is_dir() {
-          println!("unpacking pkg: {} => {} ", i, o);
+        if Path::new(i).is_file() {
+          println!("unpacking: {} => {} ", i, o);
           if opt.is_present("replace") {
             flate::unpack_replace(i, o);
           } else {
             flate::unpack(i, o);
           }
-        } else if Path::new(i).is_file() {
-          info!("decompressing file: {} => {} ", i, o);
-          flate::decompress(i)?;
         }
       }
       ("status", opt) => {
