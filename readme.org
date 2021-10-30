@@ -1,0 +1,286 @@
+# Created 2021-10-30 Sat 08:24
+#+title: shed
+#+author: ellis
+- what -- An opinionated Software Ecosystem
+- status -- ALPHA
+- version -- 0.0.1
+- [[https://hg.rwest.io/shed][src]] <-
+- [[https://docs.rwest.io/shed][docs]] <-
+* Overview
+This tool is intended to encapsulate and optimize my full development
+workflow. The idea is that I can install this tool on any development
+machine, and with a single command (=shed init=) bootstrap a
+custom-tailored workspace.
+
+* Roadmap
+** NEXT Registry
+- Domain -> Namespace -> ID
+- [Domain/Namespace]:ID index tables for quick DHT-style lookups of resource
+- Namespaces sharing the same Domain share the same Registry
+- For a similar concept, see [[https://doc.redox-os.org/book/ch04-04-urls.html][RedoxOS URLs]]
+** HACK Commands
+*** TODO clean
+- =shed clean= :: 
+  - if CWD is a project directory, perform clean script from config.
+  - elif INPUT is a project name, perform clean script from config.
+  - elif cache !empty clean global cache.
+  - else say 'nothing to clean'.
+- ARGS
+  - =--lab [LAB]= :: clean the specified lab environment
+  - =--project [PROJECT]= :: clean the specified project
+  - =--stash= :: clean the stash
+  - =--store= :: clean the store
+  - =--all= :: clean everything
+*** TODO test
+- =shed test= :: 
+  - if CWD is project directory, perform test script from config.
+  - elif INPUT is project name, perform test script from config.
+  - else say 'nothing to test'
+- ARGS
+  - =--all= :: test everything
+*** TODO list
+- =shed list= :: 
+  - =INPUT= :: projects, labs, stash, store
+  - else list service stats
+** TODO Krypt
+- 
+
+- based on intuitions from [[https://nacl.cr.yp.to/box.html][crypto_box]]
+** TODO Babel
+
+** TODO shed.el
+- daemon <-> process IPC
+- bindat protocol definitions
+- network daemon messages and packets
+* Features
+- *Src*
+  - Mercurial VCS
+    - Bundle support
+    - HTTP client/server
+    - Git import/export
+  - Build tools (=cargo=, =clang=, =Makefile=, =scripts=)
+- *X*
+  - programming environments (REPLs)
+    - embedded Python (RustPython)
+    - APLs (BQN, k6/9, Gnu/Dyalog APL)
+    - Elisp (ielm.el)
+    - Erlang (erl)
+    - Lua
+- *Babel*
+  - File templates
+  - scripts and snippets
+  - meta-programming primitives
+- *Stash*
+  - temp storage (=tmp=)
+  - music library (=music=)
+  - configs (=cfg=)
+  - library of babel (=babel=)
+  - tasks, journal, inbox, ops (=org=)
+- *Store*
+  - archive (=arch=)
+  - data (=data=)
+  - media (=media=)
+    - audio (=aud=)
+    - video (=vid=)
+  - virt (=virt=)
+    - OS images (=img=)
+    - FS images (=fs=)
+- *Lab*
+  - Virtual system management (=lxd= and =qemu=)
+    - configurable fs and network sharing for guests
+  - Bootstrap projects from =babel=, use local data from =stash= and
+    =store=
+- *Krypt*
+  - reasonably safe secret storage
+    - Wireguard, SSH, TLS, plaintext
+  - isolated access to OAuth2 and JWT authenticated API services
+    - Google, AWS, Discord, Github
+* Installation
+Once the binary is installed, run =shc init -p= to bootstrap a via
+prompts. The default config path is determined by the ~$SHED_CFG~
+environment variable or ~$HOME/.config/shed.cfg~.
+
+Some commands run just fine without writing a config to disk - A
+default configuration is supplied when =shed.cfg= can't be
+found. Other commands may panic in the event that a system or internal
+path dependency is missing.
+
+* Configuration
+Global configuration is controlled by the [[https://docs.rwest.io/shed/config/struct.Config.html][Config struct]]. The
+specification is non-exhaustive and can be extended by the user at
+runtime or in code at compile.
+#+begin_src rust
+  pub struct Config {
+      pub path: PathBuf,
+      pub src: Vec<PackageConfig>,
+      pub bin: Vec<ProgramConfig>,
+      pub net: NetworkConfig,
+      pub hg: MercurialConfig,
+      pub lab: Vec<ProjectConfig>,
+      pub usr: UserConfig,
+  }
+#+end_src
+
+Configs can be deserialized from RON, JSON, or Bincode formats. I
+prefer RON for writing local configuration, but feel free to use JSON
+instead. Bincode is intended for =shed= internal processes such as IPC
+and database storage, but exposed to the user for convenience.
+
+- RON
+  #+begin_src ron
+    // cfg.ron
+    #![enable(implicit_some)]
+    (
+      path: "~/shed",
+      src: [],
+      bin: [],
+      net: (
+        socket: "127.0.0.1:0",
+        tunnel: None,
+        engine: Http,
+        peers: None,
+      ),
+      hg: (
+        ui: {},
+        extensions: None,
+        paths: None,
+        web: (
+          name: "",
+          contact: "",
+          description: "",
+          extensions: [],
+          socket: "0.0.0.0:0",
+          paths: {},
+        ),
+      ),
+      lab: [],
+      usr: (
+        shell: (
+          env: {},
+          cmds: {},
+          shell: Bash,
+        ),
+        geo: None,
+        displays: None,
+        packages: [],
+        projects: [],
+        auth: [],
+      ),
+    )
+  #+end_src
+- JSON
+  #+begin_src json
+    {
+      "path": "/home/ellis/shed",
+      "src": [],
+      "bin": [],
+      "net": {
+        "socket": "127.0.0.1:0",
+        "tunnel": null,
+        "engine": "Http",
+        "peers": null
+      },
+      "hg": {
+        "ui": {},
+        "extensions": null,
+        "paths": null,
+        "web": {
+          "name": "",
+          "contact": "",
+          "description": "",
+          "extensions": [],
+          "socket": "0.0.0.0:0",
+          "paths": {}
+        }
+      },
+      "lab": [],
+      "usr": {
+        "shell": {
+          "env": {},
+          "cmds": {},
+          "shell": "Bash"
+        },
+        "geo": null,
+        "displays": null,
+        "packages": [],
+        "projects": [],
+        "auth": []
+      }
+    }
+  #+end_src
+- BIN
+  #+begin_src hexl
+    00000000: 1000 0000 0000 0000 2f68 6f6d 652f 656c  ......../home/el
+    00000010: 6c69 732f 7368 6564 0000 0000 0000 0000  lis/shed........
+    00000020: 0000 0000 0000 0000 0000 0000 7f00 0001  ................
+    00000030: 0000 0001 0000 0000 0000 0000 0000 0000  ................
+    00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    00000050: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    00000060: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    00000070: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    00000080: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    00000090: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    000000a0: 0000 0000 0000 0000 0000 0a              ...........
+  #+end_src
+* Commands
+#+begin_src shell
+  shc --help
+#+end_src
+
+#+results: 
+#+begin_example
+  shed 0.1.0-224613ca9b10+
+
+  ellis <ellis@rwest.io>
+
+  shed multi-development tool
+
+  USAGE:
+      shc [OPTIONS] [SUBCOMMAND]
+
+  OPTIONS:
+      -?                             set the log level
+      -c, --config <RON|JSON|BIN>    override configuration values
+      -h, --help                     Print help information
+      -V, --version                  Print version information
+
+  SUBCOMMANDS:
+      build       build scripts
+      clean       clean stuff up
+      download    fetch resources
+      edit        edit all the things
+      help        Print this message or the help of the given subcommand(s)
+      init        initialize the shed
+      krypt       blackbox
+      pack        create packages from file or directory
+      pull        fetch resources
+      push        commit changes to upstream
+      serve       network services
+      stash       local storage
+      status      print basic info
+      store       shared block storage
+      unpack      unpack .z or .tz files
+      x           do things with runtimes
+#+end_example
+
+* contrib
+- what -- Third-party code and dependencies with mirrored source trees
+- why -- isolation of external dependencies
+- [[https://hg.rwest.io/contrib][src]]
+* crater
+- what -- a private crate registry for the Rust programming language.
+- [[https://hg.rwest.io/crater][src]]
+The [[https://crates.io][crates.io]] package registry provides a number of excellent crates,
+integrates well with the =cargo= development tool, and should be
+preferred in all cases. I use =crater= when I need to:
+- import my unpublished crates
+- import the master branch of a published crate
+- import a local or patched version of a published crate
+- import a non-git crate (hg)
+
+=crater= also works well in intranet/local environments, and can be
+deployed for use in the following ways:
+- remote :: same as crates.io, registry index is publicly hosted on GitHub (default)
+- local :: registry index is stored locally, crates are retrieved remotely
+- static :: registry index and crate sources are stored locally, no
+     network requests are required
