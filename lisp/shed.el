@@ -26,17 +26,18 @@
 (defgroup shed nil
   "shed Emacs Modules")
 
-(defcustom shed-dir "~/shed/" "shed directory.")
+(defcustom shed-dir "~/shed/" "shed directory."
+  :group 'shed)
 
-(defcustom shed-data-dir (file-name-as-directory (expand-file-name "data" shed-dir))
+(defvar shed-data-dir (file-name-as-directory (expand-file-name "data" shed-dir))
   "shed data directory.")
-(defcustom shed-src-dir (file-name-as-directory (expand-file-name "src" shed-dir))
+(defvar shed-src-dir (file-name-as-directory (expand-file-name "src" shed-dir))
   "shed src directory.")
-(defcustom shed-stash-dir (file-name-as-directory (expand-file-name "stash" shed-dir))
+(defvar shed-stash-dir (file-name-as-directory (expand-file-name "stash" shed-dir))
   "shed stash directory.")
-(defcustom shed-store-dir (file-name-as-directory (expand-file-name "store" shed-dir))
+(defvar shed-store-dir (file-name-as-directory (expand-file-name "store" shed-dir))
   "shed store directory.")
-(defcustom shed-lab-dir (file-name-as-directory (expand-file-name "lab" shed-dir))
+(defvar shed-lab-dir (file-name-as-directory (expand-file-name "lab" shed-dir))
   "shed lab directory.")
 
 ;;;; Daemon 
