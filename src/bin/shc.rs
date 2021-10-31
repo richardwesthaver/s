@@ -2,7 +2,6 @@
 use shed::{app::App, cli::build_cli, config::Config};
 
 use rlib::{
-  util::Result,
   ctx, flate,
   kala::{
     cmd::{
@@ -14,7 +13,8 @@ use rlib::{
     },
     dmc, python,
   },
-  logger::log::{debug, error, info},
+  logger::log::{error, info},
+  util::Result,
 };
 
 use tenex::{ipapi::get_ip, nws::weather_report};
@@ -24,9 +24,11 @@ use std::{env, path::Path};
 #[ctx::main]
 async fn main() -> Result<()> {
   let cli = build_cli().version(env!("DEMON_VERSION")).get_matches();
+
+  // try
   let cfg = match cli.value_of("config") {
     Some(cfg) => {
-      debug!("loading config: {}", cfg);
+      println!("custom cfg: {}", cfg);
       Config::load(cfg)?
     }
     None => {
@@ -34,13 +36,14 @@ async fn main() -> Result<()> {
       if env.is_file() {
         Config::load(env)?
       } else {
-        info!("loading defaults...");
+        println!("loading defaults...");
         Config::new()
       }
     }
   };
 
-  let mut app = App::start(cfg);
+  let log_lvl = cli.occurrences_of("log_level");
+  let mut app = App::start(cfg, log_lvl)?;
 
   if let Some(cmd) = cli.subcommand() {
     match cmd {
@@ -164,10 +167,14 @@ async fn main() -> Result<()> {
       ("build", opt) => {
         println!("starting build...");
         match opt.value_of("pkg") {
-          Some(i) => app.build(opt.value_of("target").unwrap_or("o"), i).await?,
+          Some(i) => {
+            app
+              .build_src(opt.value_of("target").unwrap_or("o"), i)
+              .await?
+          }
           None => {
             app
-              .build(opt.value_of("target").unwrap_or("o"), ".")
+              .build_src(opt.value_of("target").unwrap_or("o"), ".")
               .await?
           }
         }

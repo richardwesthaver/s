@@ -1,5 +1,5 @@
 /// bin/shd.rs --- shed-daemon
-use rlib::{ctx, logger::flexi, kala::Result};
+use rlib::{ctx, kala::Result, logger::flexi};
 #[ctx::main]
 async fn main() -> Result<()> {
   flexi("trace")?;

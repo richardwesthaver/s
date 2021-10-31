@@ -1,4 +1,9 @@
-/// app.rs --- shed client backend
+//! app.rs --- shed application launcher
+/**
+Args parsed from 'cli::build_cli()' are passed to the 'App' with a
+'cfg::Config', which is handled immediately or passed on to an AppHandle.
+or handles them directly.
+*/
 use crate::config::Config;
 
 use rlib::{
@@ -12,8 +17,8 @@ use rlib::{
   },
   logger::log::{error, info},
   net::{
-    reqwest::{self, Url},
-    Client, Error as NetErr,
+    reqwest::{Client, Url},
+    Error as NetErr,
   },
   obj::Error,
   util::Result,
@@ -29,19 +34,27 @@ use std::{
 
 pub struct App {
   pub cfg: Config,
+  //  pub  args:
 }
 
 impl App {
-  pub fn start(cfg: Config) -> Self {
+  pub fn start(cfg: Config, log_lvl: u64) -> Result<Self, KErr> {
     info!("App Config: {:?}", cfg);
     let shed_path: PathBuf = cfg.path.clone();
+    let lvl = match log_lvl {
+      0 => "warn",
+      1 => "info",
+      2 => "debug",
+      3.. => "trace",
+    };
     match shed_path.join("data/log").to_str() {
       Some(p) => {
-        rlib::logger::file("debug", p, "shed").expect("logger init failed");
+        rlib::logger::file(lvl, p, "shc").expect("logger init failed");
       }
-      None => rlib::logger::flexi("info").expect("logger init failed"),
+      None => rlib::logger::flexi(lvl).expect("logger init failed"),
     };
-    App { cfg }
+    println!("{:#?}", cfg);
+    Ok(App { cfg })
   }
 
   pub fn build_dirs(self) -> Result<()> {
@@ -54,8 +67,8 @@ impl App {
   }
 
   pub fn init_cfg(&self, fmt: Option<&str>) -> Result<()> {
-    let p = Path::new(env!("CFG"));
-    if !p.join("shed.cfg").exists() {
+    let p = Path::new(env!("CFG")).join("shed.cfg");
+    if !p.exists() {
       println!("writing shed.cfg to {}...", p.display());
       match fmt {
         Some("ron") | None => self.cfg.write(&p, None)?,
@@ -69,7 +82,7 @@ impl App {
     Ok(())
   }
 
-  pub async fn build(&mut self, target: &str, pkg: &str) -> Result<(), KErr> {
+  pub async fn build_src(&mut self, target: &str, pkg: &str) -> Result<(), KErr> {
     if self.cfg.src.drain_filter(|src| src.name != *pkg).count() > 0 {
       println!("matched packages");
     };
@@ -77,6 +90,7 @@ impl App {
     Ok(())
   }
 
+  /// re-initialize the database
   pub fn init_db(&self) -> Result<(), DbErr> {
     let db_path: PathBuf = self.cfg.path.clone().join("data/db");
     std::fs::remove_dir_all(&db_path)?;
@@ -96,9 +110,7 @@ impl App {
 
   pub async fn clean(self, input: &str) -> Result<()> {
     match input {
-      "cfg" => {
-        remove_file(option_env!("SHED_CFG").expect("poisoned env! SHED_CFG should be set."))?
-      }
+      "cfg" => remove_file(option_env!("SHED_CFG").expect("SHED_CFG should be set."))?,
       "log" => remove_file(self.cfg.path.join("data/log/shed.log"))?,
       _ => {
         for i in self.cfg.src.iter() {
@@ -120,9 +132,8 @@ impl App {
   }
 
   pub async fn dl(&self, t: &str, resource: &str) -> Result<(), NetErr> {
-    let cfg = self.cfg.net.clone();
-    let _client = Client { cfg };
     let dst = self.cfg.path.join("stash/tmp/");
+    let client = Client::new();
     match t {
       "hg" => {
         let u = format!("https://hg.rwest.io/{}", &resource);
@@ -182,22 +193,29 @@ impl App {
       }
       "cdn" => {
         let u = format!("https://rwest.io/a/{}", &resource);
-        download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
+        download(&client, Url::from_str(&u).unwrap(), &dst)
+          .await
+          .unwrap();
       }
       "pkg" => {
         let u = format!("https://rwest.io/y/{}", &resource);
-        download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
+        download(&client, Url::from_str(&u).unwrap(), &dst)
+          .await
+          .unwrap();
       }
       "http" => {
         let u = format!("http://{}", &resource);
-        download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
+        download(&client, Url::from_str(&u).unwrap(), &dst)
+          .await
+          .unwrap();
       }
       "https" => {
         let u = format!("https://{}", &resource);
-        download(Url::from_str(&u).unwrap(), &dst).await.unwrap();
+        download(&client, Url::from_str(&u).unwrap(), &dst)
+          .await
+          .unwrap();
       }
       "ssh" => {
-        let _cfg = &self.cfg.usr.auth;
         println!("requesting resource over ssh: {}", resource);
       }
       _ => error!("unrecognized server type {:?}", t),
@@ -206,11 +224,9 @@ impl App {
   }
 }
 
-/// HTTP download client
-///
-/// note: correct way to do this is by using shared rlib::net::reqwest::Client
-async fn download<P: AsRef<Path>>(url: reqwest::Url, path: P) -> Result<(), NetErr> {
-  let res = reqwest::get(url).await?;
+/// HTTP file download client
+async fn download<P: AsRef<Path>>(client: &Client, url: Url, path: P) -> Result<(), NetErr> {
+  let res = client.get(url).send().await?;
   let mut dst = {
     let fname = res
       .url()
@@ -219,10 +235,12 @@ async fn download<P: AsRef<Path>>(url: reqwest::Url, path: P) -> Result<(), NetE
       .and_then(|name| if name.is_empty() { None } else { Some(name) });
     let fname = path
       .as_ref()
-      .join(fname.expect("failed to parse path from objurl"));
+      .join(fname.expect("failed to parse path from url"));
     File::create(fname)?
   };
   let content = res.text().await?;
   std::io::copy(&mut content.as_bytes(), &mut dst)?;
   Ok(())
 }
+
+pub trait AppHandle {}

@@ -26,7 +26,11 @@ pub fn build_cli() -> App<'static> {
     .subcommands(vec![
       App::new("init")
         .about("initialize the shed")
-        .arg(Arg::new("path").takes_value(true).default_value("."))
+        .arg(
+          Arg::new("path")
+            .takes_value(true)
+            .default_value("~/.config/shed.cfg"),
+        )
         .arg(Arg::new("db").short('d').long("db"))
         .arg(
           Arg::new("fmt")
