@@ -1,11 +1,11 @@
-# Created 2021-10-30 Sat 08:24
+# Created 2021-10-31 Sun 05:06
 #+title: shed
-#+author: ellis
 - what -- An opinionated Software Ecosystem
 - status -- ALPHA
 - version -- 0.0.1
 - [[https://hg.rwest.io/shed][src]] <-
 - [[https://docs.rwest.io/shed][docs]] <-
+
 * Overview
 This tool is intended to encapsulate and optimize my full development
 workflow. The idea is that I can install this tool on any development
