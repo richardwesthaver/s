@@ -49,11 +49,13 @@
   "Hook run when the shed server creates a client frame.
 The created frame is selected when the hook is called."
   :type 'hook
-  :version "27.1")
+  :version "27.1"
+  :group 'shed-daemon)
 
 (defcustom server-done-hook nil
   "Hook run when done editing a buffer for the shed server."
-  :type 'hook)
+  :type 'hook
+  :group 'shed-daemon)
 
 (defvar server-process nil
   "The current server process.")
@@ -86,10 +88,6 @@ $ emacsclient -c
 (define-key special-event-map [sigusr1] 'signal-restart-server)
 
 ;;;; Process
-(defun msg-me (process event)
-  (princ
-   (format "Process: %s had the event `%s'" process event)))
-
 (defun ordinary-insertion-filter (proc string)
   (when (buffer-live-p (process-buffer proc))
     (with-current-buffer (process-buffer proc)
@@ -125,13 +123,14 @@ $ emacsclient -c
    :coding 'binary
    :host host
    :service port
-   :type 'datagram))
+   :type 'datagram
+   :nowait t))
 
 (defun shed-cmd-server-start nil
   "starts a shed-cmd broadcaster over udp"
   (interactive)
   (unless (process-status "shed-cmd-server")
-    (make-network-process :name "shed-cmd-server" :buffer "*shed-cmd-server*" :family 'ipv4 :service shed-cmd-server-port :type 'datagram :coding 'binary :sentinel 'shed-cmd-server-sentinel :filter 'shed-cmd-server-filter :server 't) 
+    (make-network-process :name "shed-cmd-server" :buffer "*shed-cmd-server*" :family 'ipv4 :service shed-cmd-server-port :type 'datagram :coding 'binary :sentinel 'shed-cmd-server-sentinel :filter 'shed-cmd-server-filter :server t :broadcast t) 
     (setq shed-cmd-server-clients '())
     )
   )
@@ -164,8 +163,8 @@ $ emacsclient -c
 
 (defun shed-cmd-server-sentinel (proc msg)
   (when (string= msg "connection broken by remote peer\n")
-    (setq echo-server-clients (assq-delete-all proc echo-server-clients))
-    (echo-server-log (format "client %s has quit" proc))))
+    (setq shed-cmd-server-clients (assq-delete-all proc echo-server-clients))
+    (shed-cmd-server-log (format "client %s has quit" proc))))
 
 ;;from server.el
 ;;;###autoload
@@ -246,12 +245,13 @@ $ emacsclient -c
   :safe 'stringp)
 
 ;;;;; Python
-(setq python-shell-interpreter "shed"
+(setq python-shell-interpreter "shc"
       python-shell-interpreter-interactive-arg "x py"
       python-shell-interpreter-args "x py"
       python-shell-prompt-detect-failure-warning nil
       python-shell-prompt-regexp ">>>>>")
-(setq python-shell-completion-native-disabled-interpreters "shed")
-;;;; pkg 
+(setq python-shell-completion-native-disabled-interpreters "shc")
+
+;;;; provide
 (provide 'shed)
 ;;; shed.el ends here

@@ -1,3 +1,4 @@
+cargo-features = ["strip"]
 [package]
 name = "shed"
 version = "0.1.0"
@@ -10,6 +11,12 @@ license-file = "copying"
 description = "self-hosted dev env"
 publish = ["crater"]
 default-run = "shc"
+
+[profile.release]
+lto = true
+strip = true
+panic = 'abort'
+codegen-units = 1
 
 [lib]
 path = "src/lib.rs"
@@ -28,11 +35,12 @@ path = "src/bin/shd.rs"
 
 [dependencies]
 # rlib
-rlib = { version = "0.1.0", path = "../rlib", features = ["logger", "ctx", "cli", "bs", "obj", "flate", "db", "net", "hg", "python", "dmc", "sys", "midi"] }
+rlib = { version = "0.1.0", path = "../rlib", features = ["logger", "cli", "bs", "obj", "flate", "db", "net", "hg", "python", "dmc", "sys", "midi"] }
 tenex = { version = "0.1.0", path = "../tenex", features = ["ipapi", "nws", "google"] }
 # contrib
 serde = { version = "1.0.128", features = ["derive"] }
 clap = { version = "3.0.0-beta.5", features = ["suggestions", "color", "derive", "env", "cargo", "wrap_help"] }
+tokio = "1.12.0"
 [build-dependencies]
 rlib = { version = "0.1.0", path = "../rlib", features = ["bs", "flate2", "cli"] }
-#dirs = { package = "dirs-next", version = "2.0.0" }
+

@@ -1,7 +1,7 @@
 /// cli.rs --- shed client cli
 use rlib::util::cli::{App, AppSettings, Arg, ColorChoice};
 pub fn build_cli() -> App<'static> {
-  App::new("shed")
+  App::new("shc")
     .author("ellis <ellis@rwest.io>")
     .about("shed multi-development tool")
     .setting(AppSettings::TrailingVarArg)
@@ -11,7 +11,6 @@ pub fn build_cli() -> App<'static> {
       Arg::new("config")
         .short('c')
         .long("config")
-        .value_name("RON|JSON|BIN")
         .about("override configuration values")
         .takes_value(true)
         .global(true),
@@ -31,11 +30,12 @@ pub fn build_cli() -> App<'static> {
             .takes_value(true)
             .default_value("~/.config/shed.cfg"),
         )
+        .arg(Arg::new("force").short('f').long("force"))
         .arg(Arg::new("db").short('d').long("db"))
         .arg(
           Arg::new("fmt")
+            .long("fmt")
             .takes_value(true)
-            .short('f')
             .about("config format")
             .possible_values(&["json", "ron", "bin"]),
         ),

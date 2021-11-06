@@ -1,7 +1,7 @@
 /// bin/shs.rs --- shed-server
-use rlib::{ctx, kala::Result, logger::flexi};
+use rlib::{logger::flexi, util::Result};
 
-#[ctx::main]
+#[tokio::main]
 async fn main() -> Result<()> {
   flexi("trace")?;
   Ok(())

@@ -13,21 +13,20 @@ use rlib::util::{
   Result,
 };
 
-use std::env;
+use std::{env, fs, path};
 
 include!("src/cli.rs");
 
 fn main() -> Result<()> {
   generate_cargo_keys();
-
-  if env::var("PROFILE")?.eq("release") {
-    let o = env::var_os("OUT_DIR").unwrap();
-    let c = (&mut build_cli(), "shed", &o);
-    generate_to(Bash, c.0, c.1, c.2)?;
-    generate_to(Zsh, c.0, c.1, c.2)?;
-    generate_to(PowerShell, c.0, c.1, c.2)?;
-  };
-
+  let o: path::PathBuf = env!("CARGO_MANIFEST_DIR").into();
+  if !o.exists() {
+    fs::create_dir(&o)?;
+  }
+  let c = (&mut build_cli(), "shc", &o.join("etc/"));
+  generate_to(Bash, c.0, c.1, c.2)?;
+  generate_to(Zsh, c.0, c.1, c.2)?;
+  generate_to(PowerShell, c.0, c.1, c.2)?;
   println!("cargo:rerun-if-changed=build.rs");
   Ok(())
 }
