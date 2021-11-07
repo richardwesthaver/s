@@ -1,16 +1,11 @@
-# Created 2021-10-31 Sun 05:06
+# Created 2021-11-06 Sat 21:33
 #+title: shed
-- what -- An opinionated Software Ecosystem
+#+author: ellis
+- what -- A Self-hosted Development Environment
 - status -- ALPHA
 - version -- 0.0.1
 - [[https://hg.rwest.io/shed][src]] <-
 - [[https://docs.rwest.io/shed][docs]] <-
-
-* Overview
-This tool is intended to encapsulate and optimize my full development
-workflow. The idea is that I can install this tool on any development
-machine, and with a single command (=shed init=) bootstrap a
-custom-tailored workspace.
 
 * Roadmap
 ** NEXT Registry
@@ -229,7 +224,7 @@ and database storage, but exposed to the user for convenience.
 
 #+results: 
 #+begin_example
-  shed 0.1.0-224613ca9b10+
+  shc 0.1.0-3b12908646a1+
 
   ellis <ellis@rwest.io>
 
@@ -239,10 +234,10 @@ and database storage, but exposed to the user for convenience.
       shc [OPTIONS] [SUBCOMMAND]
 
   OPTIONS:
-      -?                             set the log level
-      -c, --config <RON|JSON|BIN>    override configuration values
-      -h, --help                     Print help information
-      -V, --version                  Print version information
+      -?                       set the log level
+      -c, --config <config>    override configuration values
+      -h, --help               Print help information
+      -V, --version            Print version information
 
   SUBCOMMANDS:
       build       build scripts
