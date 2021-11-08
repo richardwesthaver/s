@@ -1,6 +1,5 @@
-# Created 2021-11-06 Sat 21:33
+# Created 2021-11-07 Sun 20:59
 #+title: shed
-#+author: ellis
 - what -- A Self-hosted Development Environment
 - status -- ALPHA
 - version -- 0.0.1
