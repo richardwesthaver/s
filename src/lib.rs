@@ -13,7 +13,17 @@ individual programs in the `bin` folder.
 // / __| '_ \ / _ \/ _` |
 // \__ \ | | |  __/ (_| |
 // |___/_| |_|\___|\__,_|
+
+// client
 mod cli;
 mod app;
-mod config;
 pub use self::{cli::build_cli, app::App, config::Config};
+
+// common
+mod config;
+mod coding;
+
+// services
+mod web;
+
+pub const MTU: usize = u16::MAX as usize;

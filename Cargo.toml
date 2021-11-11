@@ -41,6 +41,14 @@ tenex = { version = "0.1.0", path = "../tenex", features = ["ipapi", "nws", "goo
 serde = { version = "1.0.128", features = ["derive"] }
 clap = { version = "3.0.0-beta.5", features = ["suggestions", "color", "derive", "env", "cargo", "wrap_help"] }
 tokio = "1.12.0"
+bytes = "1.1.0"
+tokio-util = { version = "0.6.9", features = ["codec", "net"] }
+futures = "0.3.17"
+tokio-stream = "0.1.8"
+hyper = { version = "0.14", features = ["full"] }
+hyper-tls = "0.5.0"
+axum = "0.3.2"
+axum-server = { version = "0.3", features = ["tls-rustls"] }
 [build-dependencies]
 rlib = { version = "0.1.0", path = "../rlib", features = ["bs", "flate2", "cli"] }
 
