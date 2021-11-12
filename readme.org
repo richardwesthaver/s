@@ -1,4 +1,4 @@
-# Created 2021-11-11 Thu 04:27
+# Created 2021-11-12 Fri 02:49
 #+title: shed
 - what -- A Self-hosted Development Environment
 - status -- ALPHA
@@ -26,12 +26,12 @@
   - =--store= :: clean the store
   - =--all= :: clean everything
 *** TODO test
-- =shed test= :: 
+- =shed test=
   - if CWD is project directory, perform test script from config.
   - elif INPUT is project name, perform test script from config.
   - else say 'nothing to test'
 - ARGS
-  - =--all= :: test everything
+  - =--all= => test everything
 *** TODO list
 - =shed list= :: 
   - =INPUT= :: projects, labs, stash, store
