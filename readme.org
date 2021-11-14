@@ -7,7 +7,7 @@
 - [[https://docs.rwest.io/shed][docs]] <-
 
 * Roadmap
-** NEXT Registry
+** TODO Registry
 - Domain -> Namespace -> ID
 - [Domain/Namespace]:ID index tables for quick DHT-style lookups of resource
 - Namespaces sharing the same Domain share the same Registry
