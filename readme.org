@@ -1,4 +1,4 @@
-# Created 2021-11-12 Fri 02:49
+# Created 2021-11-17 Wed 00:43
 #+title: shed
 - what -- A Self-hosted Development Environment
 - status -- ALPHA
@@ -6,8 +6,16 @@
 - [[https://hg.rwest.io/shed][src]] <-
 - [[https://docs.rwest.io/shed][docs]] <-
 
+#+results: 
+| key     | val                                      |
+|---------+------------------------------------------|
+| name    | nil                                      |
+| version | alpha-0.1                                |
+| rev     | [[https://hg.rwest.io/nil/rev/nil][nil]] |
+| update  | nil                                      |
+
 * Roadmap
-** TODO Registry
+** NEXT Registry
 - Domain -> Namespace -> ID
 - [Domain/Namespace]:ID index tables for quick DHT-style lookups of resource
 - Namespaces sharing the same Domain share the same Registry
@@ -105,13 +113,13 @@ specification is non-exhaustive and can be extended by the user at
 runtime or in code at compile.
 #+begin_src rust
   pub struct Config {
-      pub path: PathBuf,
-      pub src: Vec<PackageConfig>,
-      pub bin: Vec<ProgramConfig>,
-      pub net: NetworkConfig,
-      pub hg: MercurialConfig,
-      pub lab: Vec<ProjectConfig>,
-      pub usr: UserConfig,
+    pub path: PathBuf,
+    pub src: Vec<PackageConfig>,
+    pub bin: Vec<ProgramConfig>,
+    pub net: NetworkConfig,
+    pub hg: MercurialConfig,
+    pub lab: Vec<ProjectConfig>,
+    pub usr: UserConfig,
   }
 #+end_src
 
