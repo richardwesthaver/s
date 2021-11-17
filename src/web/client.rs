@@ -4,7 +4,7 @@ Generic HTTP/S Client bound to a socket. The 'WebClientConfig'
 controls various transport parameters like timeouts, socket range,
 auth, etc.
 */
-use hyper::{Client, client::HttpConnector};
+use hyper::{client::HttpConnector, Client};
 use hyper_tls::HttpsConnector;
 
 /// spawn an unmanaged HTTP/S client handle. The socket is provided by

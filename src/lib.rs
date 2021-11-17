@@ -15,13 +15,13 @@ individual programs in the `bin` folder.
 // |___/_| |_|\___|\__,_|
 
 // client
-mod cli;
 mod app;
-pub use self::{cli::build_cli, app::App, config::Config};
+mod cli;
+pub use self::{app::App, cli::build_cli, config::Config};
 
 // common
-mod config;
 mod coding;
+mod config;
 
 // services
 mod web;

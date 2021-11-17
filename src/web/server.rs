@@ -5,9 +5,9 @@ connections on a single port and responds to clients based on the
 recv_ methods.
 */
 use axum::Router;
-use tokio::sync::watch::{channel, Receiver, Sender as WatchSender};
-use tokio::sync::mpsc::Sender;
 use std::net::SocketAddr;
+use tokio::sync::mpsc::Sender;
+use tokio::sync::watch::{channel, Receiver, Sender as WatchSender};
 
 pub struct WebServerConfig {
   socket: SocketAddr,

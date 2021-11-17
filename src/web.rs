@@ -4,13 +4,13 @@
 //! controlled by simple messages over UDP socket. All we're doing is
 //! listening for message frames and interacting with a HTTP Client or
 //! Server.
-use tokio_util::udp::UdpFramed;
-use tokio::net::UdpSocket;
-use std::net::SocketAddr;
-use bytes::{BytesMut, Bytes};
-use tokio_stream::StreamExt;
-use futures::SinkExt;
 use crate::coding::Codec;
+use bytes::{Bytes, BytesMut};
+use futures::SinkExt;
+use std::net::SocketAddr;
+use tokio::net::UdpSocket;
+use tokio_stream::StreamExt;
+use tokio_util::udp::UdpFramed;
 
 mod client;
 mod server;
@@ -46,7 +46,7 @@ pub enum Signal {
 #[derive(PartialEq)]
 pub struct CommandResponse;
 
-pub struct CtrlSocket{
+pub struct CtrlSocket {
   socket: UdpFramed<Codec>,
   owner: Option<SocketAddr>,
 }
@@ -65,7 +65,9 @@ impl CtrlSocket {
     if let Some(Ok((frame, addr))) = i {
       println!("OK {} => {}", addr, String::from_utf8_lossy(&frame));
       Some(frame)
-    } else {None}
+    } else {
+      None
+    }
   }
   pub async fn respond(&mut self, sender: SocketAddr, buff: Bytes) -> &Self {
     let sock = &mut self.socket;
@@ -112,7 +114,9 @@ mod tests {
   }
   #[tokio::test]
   async fn test_sentinel() {
-    let cfg = WebConfig { socket: "127.0.0.1:0".parse().unwrap() };
+    let cfg = WebConfig {
+      socket: "127.0.0.1:0".parse().unwrap(),
+    };
     let st = WebSentinel::new(cfg).await;
     let res = st.send_signal(Signal::Init(String::from("test"))).await;
     assert!(res == CommandResponse);

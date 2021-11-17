@@ -1,4 +1,4 @@
-# Created 2021-11-17 Wed 03:46
+# Created 2021-11-17 Wed 06:21
 #+title: shed
 - what -- A Self-hosted Development Environment
 - status -- ALPHA
@@ -231,7 +231,7 @@ and database storage, but exposed to the user for convenience.
 
 #+results: 
 #+begin_example
-  shc 0.1.0-3b12908646a1+
+  shc 0.1.0-cabff8b1bfd2+
 
   ellis <ellis@rwest.io>
 
