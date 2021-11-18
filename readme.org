@@ -1,4 +1,4 @@
-# Created 2021-11-17 Wed 20:41
+# Created 2021-11-17 Wed 21:10
 #+title: shed
 - what -- A Self-hosted Development Environment
 - status -- ALPHA
