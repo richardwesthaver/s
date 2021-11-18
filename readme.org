@@ -1,4 +1,4 @@
-# Created 2021-11-17 Wed 06:21
+# Created 2021-11-17 Wed 20:41
 #+title: shed
 - what -- A Self-hosted Development Environment
 - status -- ALPHA
@@ -7,8 +7,6 @@
 - [[https://docs.rwest.io/shed][docs]] <-
 
 #+results: 
-| key     | val                                      |
-|---------+------------------------------------------|
 | name    | nil                                      |
 | version | alpha-0.1                                |
 | rev     | [[https://hg.rwest.io/nil/rev/nil][nil]] |
@@ -231,7 +229,7 @@ and database storage, but exposed to the user for convenience.
 
 #+results: 
 #+begin_example
-  shc 0.1.0-cabff8b1bfd2+
+  shc 0.1.0-867fdd94c0ed
 
   ellis <ellis@rwest.io>
 
