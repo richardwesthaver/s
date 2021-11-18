@@ -1,4 +1,4 @@
-# Created 2021-11-17 Wed 22:00
+# Created 2021-11-17 Wed 22:06
 #+title: shed
 - what -- A Self-hosted Development Environment
 - status -- ALPHA
@@ -7,10 +7,10 @@
 - [[https://docs.rwest.io/shed][docs]] <-
 
 #+results: 
-| name    | nil                                      |
-| version | alpha-0.1                                |
-| rev     | [[https://hg.rwest.io/nil/rev/nil][nil]] |
-| update  | nil                                      |
+| name    | shed                                                        |
+| version | alpha-0.1                                                   |
+| rev     | [[https://hg.rwest.io/shed/rev/20cebc4801b3][20cebc4801b3]] |
+| update  | 21 hours ago                                                |
 
 * Roadmap
 ** NEXT Registry
