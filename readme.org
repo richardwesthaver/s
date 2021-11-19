@@ -1,17 +1,16 @@
-# Created 2021-11-18 Thu 00:54
+# Created 2021-11-19 Fri 04:26
 #+title: shed
-- what -- A Self-hosted Development Environment
-- status -- ALPHA
-- version -- 0.0.1
-- [[https://hg.rwest.io/shed][src]] <-
-- [[https://docs.rwest.io/shed][docs]] <-
-
+SelfHostED
 #+results: 
-| name    | [[https://rwest.io/m#shed][shed]]                                                                                    |
-| version | alpha-0.1                                                                                                            |
-| vc      | [[https://hg.rwest.io/shed/rev/8147771c6b85][61:8147771c6b85]], [[https://github.com/richardwesthaver/shed][github]] |
-| updated | 23 hours ago                                                                                                         |
-| count   | 4922 lines, 9886 words                                                                                               |
+| info    |                                                                                                                       |
+|---------+-----------------------------------------------------------------------------------------------------------------------|
+| name    | [[https://rwest.io/m#shed][shed]]                                                                                     |
+| version | alpha-0.1                                                                                                             |
+| vc      | [[https://hg.rwest.io/shed/rev/d696a8ae75d5][63+:d696a8ae75d5]], [[https://github.com/richardwesthaver/shed][github]] |
+| updated | 26 hours ago                                                                                                          |
+| lines   | 6935 = λ:2105 #:102 _:136                                                                                             |
+| langs   | (Bash Elisp Makefile Org PowerShell Rust Toml)                                                                        |
+|---------+-----------------------------------------------------------------------------------------------------------------------|
 
 * Roadmap
 ** NEXT Registry
@@ -53,49 +52,27 @@
 - daemon <-> process IPC
 - bindat protocol definitions
 - network daemon messages and packets
-* Features
-- *Src*
-  - Mercurial VCS
-    - Bundle support
-    - HTTP client/server
-    - Git import/export
-  - Build tools (=cargo=, =clang=, =Makefile=, =scripts=)
-- *X*
+* Programs
+- *shc*
+  - CLI client
+  - used to interact with the services
+- *shx*
   - programming environments (REPLs)
     - embedded Python (RustPython)
     - APLs (BQN, k6/9, Gnu/Dyalog APL)
     - Elisp (ielm.el)
     - Erlang (erl)
     - Lua
-- *Babel*
-  - File templates
-  - scripts and snippets
-  - meta-programming primitives
-- *Stash*
-  - temp storage (=tmp=)
-  - music library (=music=)
-  - configs (=cfg=)
-  - library of babel (=babel=)
-  - tasks, journal, inbox, ops (=org=)
-- *Store*
-  - archive (=arch=)
-  - data (=data=)
-  - media (=media=)
-    - audio (=aud=)
-    - video (=vid=)
-  - virt (=virt=)
-    - OS images (=img=)
-    - FS images (=fs=)
-- *Lab*
-  - Virtual system management (=lxd= and =qemu=)
-    - configurable fs and network sharing for guests
-  - Bootstrap projects from =babel=, use local data from =stash= and
-    =store=
-- *Krypt*
+- *shk*
+  - krypt service
   - reasonably safe secret storage
     - Wireguard, SSH, TLS, plaintext
-  - isolated access to OAuth2 and JWT authenticated API services
-    - Google, AWS, Discord, Github
+- *she*
+  - emacs daemon service
+- *shd*
+  - prime daemon service
+- *shs*
+  - HTTP service daemon
 * Installation
 Once the binary is installed, run =shc init -p= to bootstrap a via
 prompts. The default config path is determined by the ~$SHED_CFG~
