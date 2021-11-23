@@ -1,16 +1,29 @@
-# Created 2021-11-19 Fri 04:51
+# Created 2021-11-23 Tue 04:46
 #+title: shed
 SelfHostED
 #+results: 
-| info    |                                                                                                                       |
 |---------+-----------------------------------------------------------------------------------------------------------------------|
 | name    | [[https://rwest.io/m#shed][shed]]                                                                                     |
 | version | alpha-0.1                                                                                                             |
-| vc      | [[https://hg.rwest.io/shed/rev/d696a8ae75d5][63+:d696a8ae75d5]], [[https://github.com/richardwesthaver/shed][github]] |
-| updated | 26 hours ago                                                                                                          |
-| lines   | 6935 = λ:2105 #:102 _:136                                                                                             |
-| langs   | (Bash Elisp Makefile Org PowerShell Rust Toml)                                                                        |
+| vc      | [[https://hg.rwest.io/shed/rev/d1517402826d][67+:d1517402826d]], [[https://github.com/richardwesthaver/shed][github]] |
+| updated | 3 days ago                                                                                                            |
+| lines   | 1632 = λ:1369 #:132 _:131                                                                                             |
+| langs   | (Elisp Makefile Org Rust Toml)                                                                                        |
 |---------+-----------------------------------------------------------------------------------------------------------------------|
+
+#+results: 
+| includes | (readme.org makefile Cargo.toml build.rs rustfmt.toml lisp/ src/) |
+
+#+results: 
+| file         | size |          updated |
+|--------------+------+------------------|
+| build.rs     |  796 | 2021-11-20-02:24 |
+| Cargo.toml   | 1.4K | 2021-11-11-00:11 |
+| lisp         |   14 | 2021-11-15-00:35 |
+| makefile     |  424 | 2021-11-21-23:25 |
+| readme.org   | 8.8K | 2021-11-23-03:21 |
+| rustfmt.toml |   52 | 2021-10-19-02:45 |
+| src          |  176 | 2021-11-22-00:05 |
 
 * Roadmap
 ** NEXT Registry
@@ -207,7 +220,7 @@ and database storage, but exposed to the user for convenience.
 
 #+results: 
 #+begin_example
-  shc 0.1.0-867fdd94c0ed
+  shc 0.1.0-d1517402826d+
 
   ellis <ellis@rwest.io>
 
@@ -229,16 +242,12 @@ and database storage, but exposed to the user for convenience.
       edit        edit all the things
       help        Print this message or the help of the given subcommand(s)
       init        initialize the shed
-      krypt       blackbox
       pack        create packages from file or directory
       pull        fetch resources
       push        commit changes to upstream
       serve       network services
-      stash       local storage
       status      print basic info
-      store       shared block storage
       unpack      unpack .z or .tz files
-      x           do things with runtimes
 #+end_example
 
 * contrib

@@ -43,10 +43,6 @@ pub fn build_cli() -> App<'static> {
         .alias("e")
         .about("edit all the things")
         .arg(Arg::new("input").takes_value(true).default_value(".")),
-      App::new("krypt")
-        .alias("k")
-        .about("blackbox")
-        .arg(Arg::new("input").takes_value(true).default_value(".")),
       App::new("clean")
         .alias("c")
         .about("clean stuff up")
@@ -102,8 +98,6 @@ pub fn build_cli() -> App<'static> {
       App::new("push")
         .about("commit changes to upstream")
         .arg(Arg::new("to").takes_value(true).about("parent to push to")),
-      App::new("store").about("shared block storage"),
-      App::new("stash").about("local storage"),
       App::new("serve")
         .about("network services")
         .arg(
@@ -129,38 +123,6 @@ pub fn build_cli() -> App<'static> {
             .takes_value(true)
             .multiple_values(true)
             .about("package to build"),
-        ),
-      App::new("x")
-        .about("do things with runtimes")
-        .arg(Arg::new("repl").takes_value(true).default_value("dmc"))
-        .arg(
-          Arg::new("command")
-            .takes_value(true)
-            .multiple_values(true)
-            .short('x')
-            .about("execute a command"),
-        )
-        .arg(
-          Arg::new("module")
-            .takes_value(true)
-            .multiple_values(true)
-            .short('m')
-            .about("execute a module"),
-        )
-        .arg(
-          Arg::new("script")
-            .takes_value(true)
-            .multiple_values(true)
-            .alias("file")
-            .short('s')
-            .short_alias('f')
-            .about("execute a script"),
-        )
-        .arg(
-          Arg::new("interpreter")
-            .takes_value(true)
-            .short('i')
-            .about("use the specified interpreter (dialect)"),
         ),
     ])
 }

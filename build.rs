@@ -23,7 +23,7 @@ fn main() -> Result<()> {
   if !o.exists() {
     fs::create_dir(&o)?;
   }
-  let c = (&mut build_cli(), "shc", &o.join("etc/"));
+  let c = (&mut build_cli(), "shc", &o);
   generate_to(Bash, c.0, c.1, c.2)?;
   generate_to(Zsh, c.0, c.1, c.2)?;
   generate_to(PowerShell, c.0, c.1, c.2)?;

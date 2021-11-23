@@ -13,11 +13,10 @@ use rlib::{
     cmd::{
       hg::{hg, hgweb},
       midi::list_midi_ports,
-      repl::{apl, bqn, dyalog, erl, k, lua, shakti},
       shell::{emacsclient, make},
       sys::{describe_host, usb_devices},
     },
-    dmc, python, Error as KErr,
+    Error as KErr,
   },
   logger::log::{error, info},
   net::{
@@ -104,6 +103,8 @@ impl<'a> App<'a> {
     Ok(App { cfg, cli })
   }
 
+  /// Matches on any subcommands and execute additional methods
+  /// accordingly.
   pub async fn dispatch(&'a self) -> Result<()> {
     if let Some(cmd) = self.cli.subcommand() {
       match cmd {
@@ -172,7 +173,11 @@ impl<'a> App<'a> {
         ("download", opt) => {
           match opt.value_of("input") {
             Some(i) => {
-              let s: Vec<&str> = i.split(":").collect();
+	      // NOTE: splitting on ':' generally isn't a good idea,
+	      // it splits common values like 'https://site.com' into
+	      // ['https', '//site.com']. Don't forget to account for
+	      // this in the parsing function!
+              let s: Vec<&str> = i.split(":").collect(); 
               info!("downloading {} from {}...", s[1], s[0]);
               self.dl(s[0], s[1]).await?;
             }
@@ -224,93 +229,6 @@ impl<'a> App<'a> {
             } else {
               flate::unpack(i, o);
             }
-          }
-        }
-        // Services
-        ("store", _opt) => {
-          println!("running store...");
-        }
-        ("stash", _opt) => {
-          println!("running stash...");
-        }
-        ("x", opt) => {
-          let it = opt.value_of("interpreter");
-          let mut args: Vec<&str> = vec![];
-          let _input = opt.value_of("input");
-          if let Some(rp) = opt.value_of("repl") {
-            match rp {
-              "python" | "py" => {
-                println!("running python interpreter");
-                python::run(|_vm| {}, opt);
-              }
-              "bqn" => {
-                println!("running BQN interpreter");
-                if let Some(f) = opt.values_of("script") {
-                  args.insert(0, "-f");
-                  for (x, i) in f.enumerate() {
-                    args.insert(x, i);
-                  }
-                  bqn(args).await?;
-                } else if let Some(f) = opt.values_of("command") {
-                  args.insert(0, "-p");
-                  for (x, i) in f.enumerate() {
-                    args.insert(x, i);
-                  }
-                  bqn(args).await?;
-                } else {
-                  args.insert(0, "-r");
-                  bqn(args).await?;
-                }
-              }
-              "elisp" | "el" => {
-                println!("running IELM");
-                emacsclient(vec!["-t", "-e", "(ielm)"]).await?;
-              }
-              "k" => {
-                if let Some("k9") = opt.value_of("interpreter") {
-                  println!("running shakti (k9) interpreter");
-                  shakti(vec![]).await?;
-                } else {
-                  println!("running ngn/k (k6) interpreter");
-                  k(vec![]).await?;
-                }
-              }
-              "erl" => {
-                println!("running Erlang interpreter");
-                erl(vec![]).await?;
-              }
-              "apl" => {
-                if let Some("gnu") = it {
-                  apl(vec![]).await?;
-                } else {
-                  println!("running APL interpreter: Dyalog");
-                  dyalog(vec!["-b"]).await?;
-                }
-              }
-              "dmc" => {
-                println!("running DMC interpreter");
-                dmc::run()?;
-              }
-              "lua" => {
-                if let Some(i) = opt.value_of("command") {
-                  args.append(vec!["-e", i].as_mut());
-                }
-                if let Some(i) = opt.value_of("module") {
-                  args.append(vec!["-l", i].as_mut());
-                }
-                if let Some(i) = opt.value_of("script") {
-                  args.append(vec![i].as_mut());
-                }
-                info!("running Lua interpreter");
-                lua(args).await?;
-              }
-              _ => {
-                println!("unknown REPL type");
-              }
-            }
-          } else {
-            println!("running the default interpreter: DMC");
-            dmc::run()?;
           }
         }
         ("edit", _) => self.edit().await?,
@@ -435,26 +353,31 @@ impl<'a> App<'a> {
         }
         todo!("see drive handler above");
       }
-      "cdn" => {
+      "a" => {
         let u = format!("https://rwest.io/a/{}", &resource);
         download(&client, Url::from_str(&u).unwrap(), &dst)
           .await
           .unwrap();
       }
-      "pkg" => {
+      "y" => {
         let u = format!("https://rwest.io/y/{}", &resource);
         download(&client, Url::from_str(&u).unwrap(), &dst)
           .await
           .unwrap();
       }
       "http" => {
-        let u = format!("http://{}", &resource);
+          let u = if &resource[..2] == "//" {
+	    format!("http:{}", &resource)
+	  } else {
+	    format!("http://{}", &resource)
+	  };
+	
         download(&client, Url::from_str(&u).unwrap(), &dst)
           .await
           .unwrap();
       }
       "https" => {
-        let u = format!("https://{}", &resource);
+        let u = format!("https:{}", &resource);
         download(&client, Url::from_str(&u).unwrap(), &dst)
           .await
           .unwrap();
